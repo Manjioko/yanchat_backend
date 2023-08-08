@@ -18,8 +18,8 @@ function message(ws, params, data) {
         globalThis.wsClients[params.get('to')].send(data.toString('utf-8'))
     }
     const fileName = globalThis.wsDataMap[params.get('id')]
-    const suffix = `${params.get('id')}_time_${new Date().getTime()}:${data.toString('utf-8')}`
-    append(fileName, suffix)
+    const suffix = `${params.get('id')}-${new Date().getTime()}:${data.toString('utf-8')}`
+    append(fp(`../dataBase/${fileName}`), suffix)
 }
 
 

@@ -3,12 +3,19 @@ import { readLine, readFile, writeFile } from './save_to_file.js'
 import { v4 as uuidv4 } from 'uuid'
 import path from 'path'
 
-globalThis.fp = p => new URL(p, import.meta.url).pathname
-const wss = new WebSocketServer({ port: 3000 })
+globalThis.fp = p => {
+    let resPath = new URL(p, import.meta.url).pathname
+    if (resPath.startsWith('/')) {
+        return resPath.slice(1)
+    }
+    return resPath
+}
+const wss = new WebSocketServer({ port: 8000 })
 if (!globalThis.wsClients) {
     globalThis.wsClients = {}
 }
 if (!globalThis.wsDataMap) {
+    // console.log('path ', new URL('../dataBase/table.json', import.meta.url), import.meta.url)
     readFile(fp('../dataBase/table.json'))
     .then(res => {
         // console.log('wsDataMap --- ', JSON.parse(res))
@@ -62,7 +69,7 @@ async function handleReadLine (ws, params) {
     } else {
         filePath = `../dataBase/${wsDataMap[params.get('id')]}`
     }
-    await readLine(filePath, ws)
+    await readLine(fp(filePath), ws)
     writeFile(fp('../dataBase/table.json'), JSON.stringify(wsDataMap))
     .catch(err => console.log('err ', err))
 }
