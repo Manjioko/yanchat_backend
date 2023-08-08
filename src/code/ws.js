@@ -2,7 +2,7 @@ import { WebSocketServer } from 'ws'
 import { readLine, readFile, writeFile } from './save_to_file.js'
 import { v4 as uuidv4 } from 'uuid'
 import path from 'path'
-
+const dataBase = '../dataBase/'
 globalThis.fp = p => {
     let resPath = new URL(p, import.meta.url).pathname
     if (resPath.startsWith('/')) {
