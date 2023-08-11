@@ -16,10 +16,14 @@ function readLine (filePath, ws) {
     }
     const rl = readline.createInterface({
         input: fs.createReadStream(filePath),
+        // crlfDelay: Infinity,
     })
     rl.on('line', line => {
         ws.send(line)
     })
+    // rl.on('pause', () => {
+    //     console.log('文件暂停读取')
+    // })
     rl.on('close', () => {
         console.log('读取文件结束。')
     })

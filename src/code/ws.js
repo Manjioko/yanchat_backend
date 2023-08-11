@@ -60,6 +60,11 @@ function readTable () {
 
 // 逐行读取并发送到客户端
 async function handleReadLine (ws, params) {
+    // 断线重连,不需要读文件
+    if (params.get('reconnect') == 1) {
+        return
+    }
+    
     let filePath = ''
     if (!wsDataMap[params.get('id')]) {
         const uuid = uuidv4()
