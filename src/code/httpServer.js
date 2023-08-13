@@ -1,7 +1,3 @@
-// const express = require('express');
-// const path = require("path");
-// const app = express();
-// const fs = require('fs')
 import express from 'express'
 import  path from 'path'
 import fs from 'fs'
