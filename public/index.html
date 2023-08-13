@@ -6,6 +6,21 @@
     <title>测试</title>
 </head>
 <body>
-    <h1>Hello World!</h1>
+    <input type="file">
 </body>
+<script>
+    document.querySelector("input").addEventListener("change", function(e) {
+        const formData = new FormData()
+        console.log(this.files[0])
+        formData.append("file", this.files[0])
+        const xhr = new XMLHttpRequest()
+        xhr.open("post", "http://127.0.0.1:9999/uploadFile")
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status >= 200 && xhr.status < 400) {
+                console.log(xhr)
+            }
+        }
+        xhr.send(formData)
+    })
+</script>
 </html>
