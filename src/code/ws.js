@@ -5,9 +5,9 @@ import path from 'path'
 const dataBase = '../dataBase/'
 globalThis.fp = p => {
     let resPath = new URL(p, import.meta.url).pathname
-    // if (resPath.startsWith('/')) {
-    //     return resPath.slice(1)
-    // }
+    if (resPath.startsWith('/')) {
+        return resPath.slice(1)
+    }
     return resPath
 }
 const wss = new WebSocketServer({ port: 8000 })

@@ -7,12 +7,11 @@ import multer from 'multer'
 const __dirname = path.resolve()
 const app = express()
 const server = http.createServer(app)
-
 const storage = multer.diskStorage({
     // 用来配置文件上传的位置
     destination: (req, file, cb) => {
         // 调用 cb 即可实现上传位置的配置
-        cb(null, __dirname + '/public/')
+        cb(null, fp('../../public/'))
     },
     
     // 用来配置上传文件的名称（包含后缀）
@@ -25,9 +24,9 @@ const storage = multer.diskStorage({
     }
 })
 
-const upload = multer({storage: storage})
+const upload = multer({ storage })
 
-app.use('/', express.static(path.join(__dirname + '/public')))
+app.use('/', express.static(path.join(fp('../../public/'))))
 
 //设置允许跨域访问该服务.
 app.all('*', function (req, res, next) {
@@ -42,7 +41,7 @@ app.all('*', function (req, res, next) {
 
 // 返回主页面，主页面需要挂载在此处
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/public/index.html')
+    res.sendFile(fp('../../public/index.html'))
 });
 
 

@@ -14,11 +14,11 @@ function close(ws,id,data) {
 }
 
 function message(ws, params, data) {
+    const suffix = `${params.get('id')}-${new Date().getTime()}:${data.toString('utf-8')}`
     if (globalThis.wsClients[params.get('to')]) {
-        globalThis.wsClients[params.get('to')].send(data.toString('utf-8'))
+        globalThis.wsClients[params.get('to')].send(suffix)
     }
     const fileName = globalThis.wsDataMap[params.get('id')]
-    const suffix = `${params.get('id')}-${new Date().getTime()}:${data.toString('utf-8')}`
     append(fp(`../dataBase/${fileName}`), suffix)
 }
 
