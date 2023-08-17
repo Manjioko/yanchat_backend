@@ -1,5 +1,5 @@
 import express from 'express'
-import path from 'path'
+import path, { basename } from 'path'
 import fs from 'fs'
 import http from 'http'
 import multer from 'multer'
@@ -19,8 +19,9 @@ const storage = multer.diskStorage({
         //filename 用于确定文件夹中的文件名的确定。 如果没有设置 filename，每个文件将设置为一个随机文件名，并且是没有扩展名的。
         // 获取文件的后缀
         let ext = path.extname(file.originalname)
+        let basename = path.basename(file.originalname, ext)
         // 拼凑文件名
-        cb(null, file.fieldname + '-' + Date.now() + ext)
+        cb(null, basename + '-' + Date.now() + ext)
     }
 })
 
@@ -47,7 +48,7 @@ app.get('/', (req, res) => {
 
 app.post('/uploadFile', upload.single('file'), (req, res) => {
     console.log(req.file.filename,' 已经上传。')
-    res.send('OK')
+    res.send(req.file.filename)
 })
 
 // http
