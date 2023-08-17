@@ -1,0 +1,15 @@
+## 销售订单、销售看板上传自定义模板
+http://192.168.106.105:8000/ams/sale/orders/upload/list/export/template 		POST
+
+## 销售订单导出：原有的接口不变，查询实体新增templateId（选择模板ID）、templateSheetName（模板名称）字段
+
+##查询导出进度
+http://192.168.106.105:8000/ams/sale/orders/export/task/{taskId}       GET
+
+
+
+## 查看日志
+http://192.168.106.105:8000/ams/sale/orders/export/task/page?current=1&size=20
+
+
+
