@@ -1,5 +1,5 @@
 import express from 'express'
-import path from 'path'
+import path, { basename } from 'path'
 import fs from 'fs'
 import http from 'http'
 import multer from 'multer'
@@ -7,12 +7,11 @@ import multer from 'multer'
 const __dirname = path.resolve()
 const app = express()
 const server = http.createServer(app)
-
 const storage = multer.diskStorage({
     // 用来配置文件上传的位置
     destination: (req, file, cb) => {
         // 调用 cb 即可实现上传位置的配置
-        cb(null, __dirname + '/public/')
+        cb(null, fp('../../public/'))
     },
     
     // 用来配置上传文件的名称（包含后缀）
@@ -20,14 +19,15 @@ const storage = multer.diskStorage({
         //filename 用于确定文件夹中的文件名的确定。 如果没有设置 filename，每个文件将设置为一个随机文件名，并且是没有扩展名的。
         // 获取文件的后缀
         let ext = path.extname(file.originalname)
+        let basename = path.basename(file.originalname, ext)
         // 拼凑文件名
-        cb(null, file.fieldname + '-' + Date.now() + ext)
+        cb(null, basename + '-' + Date.now() + ext)
     }
 })
 
-const upload = multer({storage: storage})
+const upload = multer({ storage })
 
-app.use('/', express.static(path.join(__dirname + '/public')))
+app.use('/', express.static(path.join(fp('../../public/'))))
 
 //设置允许跨域访问该服务.
 app.all('*', function (req, res, next) {
@@ -42,13 +42,13 @@ app.all('*', function (req, res, next) {
 
 // 返回主页面，主页面需要挂载在此处
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/public/index.html')
+    res.sendFile(fp('../../public/index.html'))
 });
 
 
 app.post('/uploadFile', upload.single('file'), (req, res) => {
     console.log(req.file.filename,' 已经上传。')
-    res.send('OK')
+    res.send(req.file.filename)
 })
 
 // http
