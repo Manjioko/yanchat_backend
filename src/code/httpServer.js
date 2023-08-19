@@ -59,7 +59,7 @@ app.post('/uploadFile', upload.single('file'), (req, res) => {
 
 app.post('/register', async (req, res) => {
     // console.log('req body - ', req.body)
-    const findResult =  find('user_info', 'phone_number', req.body.phone_number)
+    const findResult =  await find('user_info', 'phone_number', req.body.phone_number)
     console.log('find -- ', findResult)
     if (findResult.length) {
         res.send('exist')
