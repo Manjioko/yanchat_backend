@@ -1,14 +1,14 @@
+import '../dataBase/knexfile.js'
 import { WebSocketServer } from 'ws'
 import { readLine, readFile, writeFile } from './save_to_file.js'
 import { v4 as uuidv4 } from 'uuid'
 import path from 'path'
-// import '../dataBase/knexfile.js'
 const dataBase = '../dataBase/'
 globalThis.fp = p => {
     let resPath = new URL(p, import.meta.url).pathname
-    if (resPath.startsWith('/')) {
-        return resPath.slice(1)
-    }
+    // if (resPath.startsWith('/')) {
+    //     return resPath.slice(1)
+    // }
     return resPath
 }
 const wss = new WebSocketServer({ port: 8000 })

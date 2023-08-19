@@ -3,10 +3,17 @@ import path, { basename } from 'path'
 import fs from 'fs'
 import http from 'http'
 import multer from 'multer'
+import bodyParser from 'body-parser'
+import { v4 as uuidv4 } from 'uuid'
+import { find, insert } from '../dataBase/operator_data_base.js'
 
 const __dirname = path.resolve()
 const app = express()
 const server = http.createServer(app)
+
+// 处理 post 请求
+app.use(bodyParser.urlencoded({extended: false}))
+app.use(bodyParser.json())
 const storage = multer.diskStorage({
     // 用来配置文件上传的位置
     destination: (req, file, cb) => {
@@ -24,7 +31,6 @@ const storage = multer.diskStorage({
         cb(null, basename + '-' + Date.now() + ext)
     }
 })
-
 const upload = multer({ storage })
 
 app.use('/', express.static(path.join(fp('../../public/'))))
@@ -51,7 +57,46 @@ app.post('/uploadFile', upload.single('file'), (req, res) => {
     res.send(req.file.filename)
 })
 
+app.post('/register', async (req, res) => {
+    // console.log('req body - ', req.body)
+    const findResult =  find('user_info', 'phone_number', req.body.phone_number)
+    console.log('find -- ', findResult)
+    if (findResult.length) {
+        res.send('exist')
+        return
+    }
+    const data = {
+        user: req.body.phone_number,
+        password: req.body.password,
+        user_id: uuidv4(),
+        phone_number: req.body.phone_number,
+        friends: '',
+        group: '',
+        avatar_url: '',
+    }
+    const insertResult = insert('user_info', data)
+    if (insertResult) {
+        res.send('ok')
+        return
+    }
+    res.send('err')
+})
+
+app.post('/login', async (req, res) => {
+    console.log('req body - ', req.body)
+    const {password, phone_number} = req.body
+    const list = await find('user_info', 'phone_number', phone_number)
+    if (list.length && list[0].password === password ) {
+        return res.send('ok')
+    }
+    res.send('')
+})
+
+app.post('/add', async (req, res) => {
+    console.log('req body - ', req.body)
+})
+
 // http
 server.listen(9999, () => {
     console.log('http server is listening on *:9999')
-});
+})
