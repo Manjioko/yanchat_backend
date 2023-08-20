@@ -67,11 +67,13 @@ app.post('/getFriends', async (req, res) => {
     res.send('err')
 })
 
+// 上传文件
 app.post('/uploadFile', upload.single('file'), (req, res) => {
     console.log(req.file.filename, ' 已经上传。')
     res.send(req.file.filename)
 })
 
+// 注册
 app.post('/register', async (req, res) => {
     // console.log('req body - ', req.body)
     const findResult = await find('user_info', 'phone_number', req.body.phone_number)
@@ -95,6 +97,7 @@ app.post('/register', async (req, res) => {
     res.send('err')
 })
 
+// 登录
 app.post('/login', async (req, res) => {
     console.log('req body - ', req.body)
     const { password, phone_number } = req.body
@@ -109,6 +112,7 @@ app.post('/login', async (req, res) => {
     res.send('err')
 })
 
+// 添加好友
 app.post('/addFriend', async (req, res) => {
     const { phone_number, friend_phone_number } = req.body
     // 检查参数
