@@ -51,6 +51,21 @@ app.get('/', (req, res) => {
     res.sendFile(fp('../../public/index.html'))
 });
 
+// 获取好友列表
+app.post('/getFriends', async (req, res) => {
+    const { user_id } = req.body
+
+    if (!user_id) {
+        return res.send('err')
+    }
+
+    const list = await find('user_info', 'user_id', user_id)
+    if (list && list.length) {
+        return res.send(list[0].friends)
+    }
+
+    res.send('err')
+})
 
 app.post('/uploadFile', upload.single('file'), (req, res) => {
     console.log(req.file.filename, ' 已经上传。')
@@ -60,24 +75,22 @@ app.post('/uploadFile', upload.single('file'), (req, res) => {
 app.post('/register', async (req, res) => {
     // console.log('req body - ', req.body)
     const findResult = await find('user_info', 'phone_number', req.body.phone_number)
-    console.log('find -- ', findResult)
+    // console.log('find -- ', findResult)
     if (findResult.length) {
-        res.send('exist')
-        return
+        return res.send('exist')
     }
     const data = {
         user: req.body.phone_number,
         password: req.body.password,
         user_id: uuidv4(),
         phone_number: req.body.phone_number,
-        friends: '',
-        group: '',
-        avatar_url: '',
+        friends: null,
+        group: null,
+        avatar_url: null,
     }
     const insertResult = insert('user_info', data)
     if (insertResult) {
-        res.send('ok')
-        return
+        return res.send('ok')
     }
     res.send('err')
 })
@@ -87,13 +100,22 @@ app.post('/login', async (req, res) => {
     const { password, phone_number } = req.body
     const list = await find('user_info', 'phone_number', phone_number)
     if (list.length && list[0].password === password) {
-        return res.send('ok')
+        const data = {
+            ...list[0],
+            password: null,
+        }
+        return res.send(data)
     }
-    res.send('')
+    res.send('err')
 })
 
 app.post('/addFriend', async (req, res) => {
     const { phone_number, friend_phone_number } = req.body
+    // 检查参数
+    if (!phone_number || !friend_phone_number) {
+        console.log('参数不正确。')
+        return res.send('err')
+    }
 
     // 第一步，查是否存在好友
     const fList = await find('user_info', 'phone_number', phone_number)
@@ -102,16 +124,14 @@ app.post('/addFriend', async (req, res) => {
     const fri = fStrList.find(f => f.phone_number === friend_phone_number)
     if (fri) {
         console.log('你们已经是好友，重复添加')
-        res.send('exist')
-        return
+        return res.send('exist')
     }
 
     // 第二步，不存在好友，查询该电话(用户)是否在数据库中存在
     const hasUser = await find('user_info', 'phone_number', friend_phone_number)
     if(!hasUser || !hasUser.length) {
         console.log('该用户不存在 ', friend_phone_number)
-        res.send('miss')
-        return
+        return  res.send('miss')
     }
 
     // 第三部， 存在用户，开始添加好友
