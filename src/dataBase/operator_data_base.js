@@ -19,12 +19,23 @@ export async function find(tableName, tableStr, findStr) {
     return res
 }
 
+// 新增表字段
 export async function add(tableName, tableStr, isNotNull) {
     const [err, res] = await to(knex.schema.table(tableName, t => {
         isNotNull ? t.string(tableStr).notNullable() : t.string(tableStr)
     }))
     if (err) {
         console.log('add err -> ', err)
+        return
+    }
+    return res
+}
+
+// 数据更新
+export async function update(tableName, tableStr, findStr, updateObject) {
+    const [err, res] = await to(knex(tableName).where(tableStr, findStr).update(updateObject))
+    if (err) {
+        console.log('update err -> ', err)
         return
     }
     return res

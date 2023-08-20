@@ -5,14 +5,14 @@ import http from 'http'
 import multer from 'multer'
 import bodyParser from 'body-parser'
 import { v4 as uuidv4 } from 'uuid'
-import { find, insert } from '../dataBase/operator_data_base.js'
+import { find, insert, update } from '../dataBase/operator_data_base.js'
 
 const __dirname = path.resolve()
 const app = express()
 const server = http.createServer(app)
 
 // 处理 post 请求
-app.use(bodyParser.urlencoded({extended: false}))
+app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 const storage = multer.diskStorage({
     // 用来配置文件上传的位置
@@ -20,7 +20,7 @@ const storage = multer.diskStorage({
         // 调用 cb 即可实现上传位置的配置
         cb(null, fp('../../public/'))
     },
-    
+
     // 用来配置上传文件的名称（包含后缀）
     filename: (req, file, cb) => {
         //filename 用于确定文件夹中的文件名的确定。 如果没有设置 filename，每个文件将设置为一个随机文件名，并且是没有扩展名的。
@@ -53,13 +53,13 @@ app.get('/', (req, res) => {
 
 
 app.post('/uploadFile', upload.single('file'), (req, res) => {
-    console.log(req.file.filename,' 已经上传。')
+    console.log(req.file.filename, ' 已经上传。')
     res.send(req.file.filename)
 })
 
 app.post('/register', async (req, res) => {
     // console.log('req body - ', req.body)
-    const findResult =  await find('user_info', 'phone_number', req.body.phone_number)
+    const findResult = await find('user_info', 'phone_number', req.body.phone_number)
     console.log('find -- ', findResult)
     if (findResult.length) {
         res.send('exist')
@@ -84,16 +84,48 @@ app.post('/register', async (req, res) => {
 
 app.post('/login', async (req, res) => {
     console.log('req body - ', req.body)
-    const {password, phone_number} = req.body
+    const { password, phone_number } = req.body
     const list = await find('user_info', 'phone_number', phone_number)
-    if (list.length && list[0].password === password ) {
+    if (list.length && list[0].password === password) {
         return res.send('ok')
     }
     res.send('')
 })
 
-app.post('/add', async (req, res) => {
-    console.log('req body - ', req.body)
+app.post('/addFriend', async (req, res) => {
+    const { phone_number, friend_phone_number } = req.body
+
+    // 第一步，查是否存在好友
+    const fList = await find('user_info', 'phone_number', phone_number)
+    // console.log('-> ', fList)
+    const fStrList = JSON.parse(fList[0].friends || '[]')
+    const fri = fStrList.find(f => f.phone_number === friend_phone_number)
+    if (fri) {
+        console.log('你们已经是好友，重复添加')
+        res.send('exist')
+        return
+    }
+
+    // 第二步，不存在好友，查询该电话(用户)是否在数据库中存在
+    const hasUser = await find('user_info', 'phone_number', friend_phone_number)
+    if(!hasUser || !hasUser.length) {
+        console.log('该用户不存在 ', friend_phone_number)
+        res.send('miss')
+        return
+    }
+
+    // 第三部， 存在用户，开始添加好友
+    hasUser[0].friends = {
+        ...hasUser[0].friends,
+        group: null,
+        friends: null,
+        password: null
+    }
+    fStrList.push(hasUser[0])
+    update('user_info', 'phone_number', phone_number, {
+        friends: JSON.stringify(fStrList)
+    })
+    res.send({friends: fStrList})
 })
 
 // http
