@@ -1,4 +1,5 @@
 import knex from "knex"
+import { find } from "./operator_data_base.js"
 const tableName = 'user_info'
 
 const k = knex({
@@ -28,7 +29,23 @@ k.schema.hasTable(tableName)
 .then(() => {
     console.log(`表 ${ tableName } 已经准备好了`)
     globalThis.knex = k
+    readUserInfo()
 })
 .catch(err => {
     console.log('表创建错误 -> ', err)
 })
+
+
+// 读用户配置文件
+function readUserInfo() {
+    find('user_info').then(res => {
+        // console.log('user_info', res)
+        res.forEach(el => {
+            if (!globalThis.wsClients) globalThis.wsClients = {}
+            globalThis.wsClients[el.user_id] = null
+        })
+        console.log('globalThis.wsClients -> ', globalThis.wsClients)
+    }).catch(err => {
+        console.log('err -> ', err)
+    })
+}

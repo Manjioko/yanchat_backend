@@ -11,12 +11,23 @@ export async function insert(tableName, insertData) {
 
 // 查询数据
 export async function find(tableName, tableStr, findStr) {
-    const [err, res] = await to(knex(tableName).select("*").where(tableStr, findStr))
-    if (err) {
-        console.log('find err -> ', err)
-        return
+    let result
+    if (!tableStr || !findStr) {
+        const [err, res] = await to(knex(tableName).select("*"))
+        if (err) {
+            console.log('find err -> ', err)
+            return
+        }
+        result = res
+    } else {
+        const [err, res] = await to(knex(tableName).select("*").where(tableStr, findStr))
+        if (err) {
+            console.log('find err -> ', err)
+            return
+        }
+        result = res
     }
-    return res
+    return result
 }
 
 // 新增表字段
