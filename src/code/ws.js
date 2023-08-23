@@ -12,9 +12,9 @@ globalThis.fp = p => {
     return resPath
 }
 const wss = new WebSocketServer({ port: 8000 })
-// if (!globalThis.wsClients) {
-//     globalThis.wsClients = {}
-// }
+if (!globalThis.wsClients) {
+    globalThis.wsClients = {}
+}
 // if (!globalThis.wsDataMap) {
 //     // console.log('path ', new URL('../dataBase/table.json', import.meta.url), import.meta.url)
 //     readFile(fp('../dataBase/table.json'))
@@ -31,6 +31,7 @@ const wss = new WebSocketServer({ port: 8000 })
 // websocket server 入口函数
 function run(mf, ef, cf) {
     wss.on('connection', async function connection(ws, req) {
+        console.log('-> ', req.url)
         // 参数
         const params = new URLSearchParams(req.url.slice(2))
 

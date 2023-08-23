@@ -122,10 +122,10 @@ app.post('/addFriend', async (req, res) => {
     }
 
     // 第一步，查是否存在好友
-    const fList = await find('user_info', 'phone_number', phone_number)
-    // console.log('-> ', fList)
-    const fStrList = JSON.parse(fList[0].friends || '[]')
-    const fri = fStrList.find(f => f.phone_number === friend_phone_number)
+    const selfData = await find('user_info', 'phone_number', phone_number)
+    console.log('-> ', selfData[0].friends)
+    const selfFriendList = JSON.parse(selfData[0].friends || '[]')
+    const fri = selfFriendList.find(f => f.phone_number === friend_phone_number)
     if (fri) {
         console.log('你们已经是好友，重复添加')
         return res.send('exist')
@@ -138,18 +138,41 @@ app.post('/addFriend', async (req, res) => {
         return  res.send('miss')
     }
 
+
     // 第三部， 存在用户，开始添加好友
-    hasUser[0].friends = {
-        ...hasUser[0].friends,
+    const chat_table = uuidv4()
+    const otherUserData = JSON.parse(JSON.stringify(hasUser[0]))
+    // console.log(' other -> ', otherUserData)
+    hasUser[0] = {
+        ...hasUser[0],
         group: null,
         friends: null,
-        password: null
+        password: null,
+        chat_table,
     }
-    fStrList.push(hasUser[0])
+    selfFriendList.push(hasUser[0])
     update('user_info', 'phone_number', phone_number, {
-        friends: JSON.stringify(fStrList)
+        friends: JSON.stringify(selfFriendList)
     })
-    res.send({friends: fStrList})
+
+
+    // 对方数据库中也应该将好友数据添加进去
+    let selfCopyData = JSON.parse(JSON.stringify(selfData[0]))
+    selfCopyData = {
+        ...selfCopyData,
+        group: null,
+        friends: null,
+        password: null,
+        chat_table,
+    }
+    const otherFriendList =  JSON.parse(otherUserData.friends || '[]')
+    otherFriendList.push(selfCopyData)
+    update('user_info', 'phone_number', friend_phone_number, {
+        friends: JSON.stringify(otherFriendList)
+    })
+
+
+    res.send({friends: selfFriendList})
 })
 
 // http
