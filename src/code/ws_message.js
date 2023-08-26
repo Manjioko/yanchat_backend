@@ -1,5 +1,6 @@
 import { append } from './save_to_file.js'
 
+import { insert, find, update, hasTable, createTable } from '../dataBase/operator_data_base.js'
 
 function err(ws, id, err) {
     console.log('报错 ', err)
@@ -13,13 +14,17 @@ function close(ws,id,data) {
     console.log('已经删除 用户 ', id)
 }
 
-function message(ws, params, data) {
-    const suffix = `${params.get('id')}-${new Date().getTime()}:${data.toString('utf-8')}`
-    if (globalThis.wsClients[params.get('to')]) {
-        globalThis.wsClients[params.get('to')].send(suffix)
+async function message(ws, params, data) {
+    console.log('data -> ', data.toString('utf-8'))
+    const chat = JSON.parse(data.toString('utf-8'))
+    const isTable = await hasTable(chat)
+    console.log('isTable -> ', chat.to_table)
+    if (!isTable) {
+        await createTable(chat.to_table, [
+            { data:'chat', notNull: true }
+        ])
     }
-    const fileName = globalThis.wsDataMap[params.get('id')]
-    append(fp(`../dataBase/${fileName}`), suffix)
+    // wsClients[chat.to_id]
 }
 
 

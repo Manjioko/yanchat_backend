@@ -6,6 +6,7 @@ import multer from 'multer'
 import bodyParser from 'body-parser'
 import { v4 as uuidv4 } from 'uuid'
 import { find, insert, update } from '../dataBase/operator_data_base.js'
+import fliterProperty from '../ulits/fliterPropertyByObject.js'
 
 const __dirname = path.resolve()
 const app = express()
@@ -92,7 +93,7 @@ app.post('/register', async (req, res) => {
     }
     const insertResult = insert('user_info', data)
     if (insertResult) {
-        return res.send('ok')
+        return res.send(data)
     }
     res.send('err')
 })
@@ -122,9 +123,8 @@ app.post('/addFriend', async (req, res) => {
     }
 
     // 第一步，查是否存在好友
-    const selfData = await find('user_info', 'phone_number', phone_number)
-    console.log('-> ', selfData[0].friends)
-    const selfFriendList = JSON.parse(selfData[0].friends || '[]')
+    const selfUser = await find('user_info', 'phone_number', phone_number)
+    const selfFriendList = JSON.parse(selfUser[0]?.friends || '[]')
     const fri = selfFriendList.find(f => f.phone_number === friend_phone_number)
     if (fri) {
         console.log('你们已经是好友，重复添加')
@@ -132,41 +132,30 @@ app.post('/addFriend', async (req, res) => {
     }
 
     // 第二步，不存在好友，查询该电话(用户)是否在数据库中存在
-    const hasUser = await find('user_info', 'phone_number', friend_phone_number)
-    if(!hasUser || !hasUser.length) {
+    const otherUser = await find('user_info', 'phone_number', friend_phone_number)
+    const otherFriendList =  JSON.parse(otherUser[0]?.friends || '[]')
+    if(!otherUser || !otherUser.length) {
         console.log('该用户不存在 ', friend_phone_number)
         return  res.send('miss')
     }
 
-
+    // 设置好友聊天数据库名称
+    const chat_table = 'chat_dataBase_' + uuidv4()
+    
     // 第三部， 存在用户，开始添加好友
-    const chat_table = uuidv4()
-    const otherUserData = JSON.parse(JSON.stringify(hasUser[0]))
-    // console.log(' other -> ', otherUserData)
-    hasUser[0] = {
-        ...hasUser[0],
-        group: null,
-        friends: null,
-        password: null,
-        chat_table,
-    }
-    selfFriendList.push(hasUser[0])
+    const otherFilterUser = fliterProperty(otherUser[0], ['password', 'group', 'friends'], { chat_table })
+    // console.log('otherFilterUser -> ', otherFilterUser)
+    selfFriendList.push(otherFilterUser)
     update('user_info', 'phone_number', phone_number, {
         friends: JSON.stringify(selfFriendList)
     })
 
 
     // 对方数据库中也应该将好友数据添加进去
-    let selfCopyData = JSON.parse(JSON.stringify(selfData[0]))
-    selfCopyData = {
-        ...selfCopyData,
-        group: null,
-        friends: null,
-        password: null,
-        chat_table,
-    }
-    const otherFriendList =  JSON.parse(otherUserData.friends || '[]')
-    otherFriendList.push(selfCopyData)
+    const selfFilterUser = fliterProperty(selfUser[0], ['password', 'group', 'friends'], { chat_table })
+    
+    // console.log('selfFilterUser -> ', selfFilterUser)
+    otherFriendList.push(selfFilterUser)
     update('user_info', 'phone_number', friend_phone_number, {
         friends: JSON.stringify(otherFriendList)
     })

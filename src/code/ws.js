@@ -31,12 +31,15 @@ if (!globalThis.wsClients) {
 // websocket server 入口函数
 function run(mf, ef, cf) {
     wss.on('connection', async function connection(ws, req) {
-        console.log('-> ', req.url)
         // 参数
         const params = new URLSearchParams(req.url.slice(2))
 
+        const user = params.get('user_id')
+        if (!user || user === 'undefined') {
+            ws.close(4001, '参数不合法')
+            return
+        }
         console.log(params.get('user_id'), ' -> 已经上线')
-
         // 将客户端挂到全局
         wsClients[params.get('user_id')] = ws
 

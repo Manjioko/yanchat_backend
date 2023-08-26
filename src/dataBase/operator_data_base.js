@@ -1,4 +1,37 @@
 import { to } from 'await-to-js'
+
+// 查看表是否存在
+export async function hasTable(tableName) {
+    const [err, res] = await to(knex.schema.hasTable(tableName))
+    
+    if (err || !res) {
+        return false
+    }
+
+    return true
+}
+
+// 创建表
+export async function createTable(tableName, dataAry) {
+    const [err, res] = await to(knex.schema.createTable(tableName, t => {
+        t.increments('id').primary()
+        t.timestamps(true, true)
+        t.text('user_id').notNullable()
+        dataAry.forEach(el => {
+          if (el.notNull) {
+            t.text(el.data).notNullable()
+            return
+          }
+          t.text(el.data)
+        })
+    }))
+    if (err) {
+        console.log('create err -> ', err)
+        return
+    }
+    return res
+}
+
 // 插入数据
 export async function insert(tableName, insertData) {
     const [err, res] = await to(knex(tableName).insert(insertData))

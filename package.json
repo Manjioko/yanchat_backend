@@ -4,11 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "hotnode index.js"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "hotnode": "^0.0.8",
     "ws": "^8.13.0"
   },
   "type": "module",
