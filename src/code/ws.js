@@ -6,27 +6,12 @@ import { find } from '../dataBase/operator_data_base.js'
 const dataBase = '../dataBase/'
 globalThis.fp = p => {
     let resPath = new URL(p, import.meta.url).pathname
-    // if (resPath.startsWith('/')) {
-    //     return resPath.slice(1)
-    // }
     return resPath
 }
 const wss = new WebSocketServer({ port: 8000 })
 if (!globalThis.wsClients) {
     globalThis.wsClients = {}
 }
-// if (!globalThis.wsDataMap) {
-//     // console.log('path ', new URL('../dataBase/table.json', import.meta.url), import.meta.url)
-//     readFile(fp('../dataBase/table.json'))
-//     .then(res => {
-//         // console.log('wsDataMap --- ', JSON.parse(res))
-//         globalThis.wsDataMap = JSON.parse(res)
-//     })
-//     .catch(err => {
-//         console.log('err 1 ', err)
-//     })
-    
-// }
 
 // websocket server 入口函数
 function run(mf, ef, cf) {
@@ -43,49 +28,11 @@ function run(mf, ef, cf) {
         // 将客户端挂到全局
         wsClients[params.get('user_id')] = ws
 
-
-        // 读配置文件
-        // await readTable()
-        // 逐行读取内容并发送到客户端
-        // await handleReadLine(ws, params)
-
         ws.on('message', mf.bind(null, ws, params))
         ws.on('error', ef.bind(null,ws))
         ws.on('close', cf.bind(null,ws, params))
     });
 }
-
-// 读取本地表
-// function readTable () {
-//     return readFile(fp('../dataBase/table.json'))
-//     .then(res => {
-//         globalThis.wsDataMap = JSON.parse(res)
-//     })
-//     .catch(err => {
-//         console.log('err 1 ', err)
-//     })
-// }
-
-// 逐行读取并发送到客户端
-// async function handleReadLine (ws, params) {
-//     // 断线重连,不需要读文件
-//     if (params.get('reconnect') == 1) {
-//         return
-//     }
-    
-//     let filePath = ''
-//     if (!wsDataMap[params.get('id')]) {
-//         const uuid = uuidv4()
-//         wsDataMap[params.get('id')] = uuid
-//         wsDataMap[params.get('to')] = uuid
-//         filePath = `../dataBase/${uuid}`
-//     } else {
-//         filePath = `../dataBase/${wsDataMap[params.get('id')]}`
-//     }
-//     await readLine(fp(filePath), ws)
-//     writeFile(fp('../dataBase/table.json'), JSON.stringify(wsDataMap))
-//     .catch(err => console.log('err ', err))
-// }
 
 
 export default run

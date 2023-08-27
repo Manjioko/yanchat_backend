@@ -18,21 +18,18 @@ function close(ws,params,data) {
 async function message(ws, params, data) {
     // console.log('data -> ', data.toString('utf-8'))
     const chat = JSON.parse(data.toString('utf-8'))
-    // const isTable = await hasTable(chat.to_table)
-    // console.log('isTable -> ', isTable, chat.to_table)
-    // if (!isTable) {
-    //     await createTable(chat.to_table, [
-    //         { data: 'user_id', notNull: true},
-    //         { data:'chat', notNull: false }
-    //     ])
-    // }
-
     // 插入数据
     const insertData = {
         user_id: chat.user_id || 'test',
         chat: data.toString('utf-8')
     }
     insert(chat.to_table, insertData)
+    
+    // 如果对方在线则需要把消息实时传递到对方的账号
+    if (wsClients[chat.to_id]) {
+        // console.log('发送一些消息 -> ', ws)
+        wsClients[chat.to_id].send(data.toString('utf-8'))
+    }
 }
 
 
