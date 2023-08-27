@@ -5,7 +5,7 @@ import http from 'http'
 import multer from 'multer'
 import bodyParser from 'body-parser'
 import { v4 as uuidv4 } from 'uuid'
-import { find, insert, update } from '../dataBase/operator_data_base.js'
+import { find, insert, update, createTable } from '../dataBase/operator_data_base.js'
 import fliterProperty from '../ulits/fliterPropertyByObject.js'
 
 const __dirname = path.resolve()
@@ -141,6 +141,12 @@ app.post('/addFriend', async (req, res) => {
 
     // 设置好友聊天数据库名称
     const chat_table = 'chat_dataBase_' + uuidv4()
+
+    // 创建聊天信息数据库
+    createTable(chat_table, [
+        { data: 'user_id', notNull: true},
+        { data:'chat', notNull: false }
+    ])
     
     // 第三部， 存在用户，开始添加好友
     const otherFilterUser = fliterProperty(otherUser[0], ['password', 'group', 'friends'], { chat_table })
@@ -162,6 +168,18 @@ app.post('/addFriend', async (req, res) => {
 
 
     res.send({friends: selfFriendList})
+})
+
+// 读取聊天聊天记录
+app.post('/chatData', async (req, res) => {
+    const { chat_table } = req.body
+    // console.log('cahtdata -> ', chat_table)
+    if (!chat_table) return res.send([])
+
+    const data = await find(chat_table)
+    // console.log('data -> ', data)
+    if (!data) return res.send([])
+    return res.send(data)
 })
 
 // http

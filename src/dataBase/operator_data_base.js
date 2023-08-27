@@ -16,7 +16,7 @@ export async function createTable(tableName, dataAry) {
     const [err, res] = await to(knex.schema.createTable(tableName, t => {
         t.increments('id').primary()
         t.timestamps(true, true)
-        t.text('user_id').notNullable()
+        // t.text('user_id').notNullable()
         dataAry.forEach(el => {
           if (el.notNull) {
             t.text(el.data).notNullable()

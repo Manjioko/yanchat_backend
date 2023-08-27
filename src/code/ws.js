@@ -51,7 +51,7 @@ function run(mf, ef, cf) {
 
         ws.on('message', mf.bind(null, ws, params))
         ws.on('error', ef.bind(null,ws))
-        ws.on('close', cf.bind(null,ws, params.get('id')))
+        ws.on('close', cf.bind(null,ws, params))
     });
 }
 
