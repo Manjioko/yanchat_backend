@@ -5,6 +5,7 @@ import http from 'http'
 import multer from 'multer'
 import bodyParser from 'body-parser'
 import { v4 as uuidv4 } from 'uuid'
+import { to } from 'await-to-js'
 import { find, insert, update, createTable } from '../dataBase/operator_data_base.js'
 import fliterProperty from '../ulits/fliterPropertyByObject.js'
 
@@ -144,8 +145,9 @@ app.post('/addFriend', async (req, res) => {
 
     // 创建聊天信息数据库
     createTable(chat_table, [
-        { data: 'user_id', notNull: true},
-        { data:'chat', notNull: false }
+        { data: 'user_id', notNull: true, type: 'text' },
+        { data: 'chat', notNull: false, type: 'text' },
+        { data: 'unread', notNull: true, type: 'boolean' }
     ])
     
     // 第三部， 存在用户，开始添加好友
@@ -180,6 +182,38 @@ app.post('/chatData', async (req, res) => {
     // console.log('data -> ', data)
     if (!data) return res.send([])
     return res.send(data)
+})
+
+// 读未读信息
+app.post('/unread', async (req, res) => {
+    const { friends, user_id } = req.body
+    console.log('friends -> ', friends)
+    if (!friends || !Array.isArray(friends)) return res.send('err')
+    if (!user_id || typeof user_id !== 'string') return res.send('err')
+    const resultOb = {}
+    for (const table_id of friends) {
+        const [ferr, fdata] = await to(knex(table_id).select('*').where(function() {
+            this.where('unread', true).whereNot('user_id', user_id)
+        }))
+        if (ferr) {
+            console.log('ferr -> ', ferr)
+            continue
+        }   
+        
+        if (!fdata || !fdata?.length) {
+            const [zerr, zdata] = await to(find(table_id))
+            if (zerr) continue
+            let resData = zdata?.pop()
+            resultOb[table_id] = [resData]
+            continue
+        }
+
+        resultOb[table_id] = fdata
+        await to(knex(table_id).where(function() {
+            this.where('unread', true).whereNot('user_id', user_id)
+        }).update({ unread: false}))
+    }
+    res.send(resultOb)
 })
 
 // http

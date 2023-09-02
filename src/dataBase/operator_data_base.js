@@ -18,11 +18,35 @@ export async function createTable(tableName, dataAry) {
         t.timestamps(true, true)
         // t.text('user_id').notNullable()
         dataAry.forEach(el => {
-          if (el.notNull) {
-            t.text(el.data).notNullable()
-            return
-          }
-          t.text(el.data)
+            if (el.type === 'text') {
+                if (el.notNull) {
+                    t.text(el.data).notNullable()
+                    return
+                }
+                t.text(el.data)
+                return
+            }
+
+            if (el.type === 'boolean') {
+                if (el.notNull) {
+                    t.boolean(el.data).notNullable()
+                    return
+                }
+                t.boolean(el.data)
+                return
+            }
+
+            if (el.type === 'integer') {
+                if (el.notNull) {
+                    t.integer(el.data).notNullable()
+                    return
+                }
+                t.integer(el.data)
+                return
+            }
+
+            t.string(el.data)
+
         })
     }))
     if (err) {
