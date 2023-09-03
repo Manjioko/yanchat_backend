@@ -75,6 +75,14 @@ app.post('/uploadFile', upload.single('file'), (req, res) => {
     res.send(req.file.filename)
 })
 
+// 客户端获取文件
+app.post('/getFile', async (req, res) => {
+    const { filename } = req.body
+    console.log('-> ', fp('../../public/' + decodeURIComponent(filename)))
+    if (!filename || typeof filename !== 'string') return res.send('res')
+    res.sendFile(decodeURIComponent(fp('../../public/' + filename)))
+})
+
 // 注册
 app.post('/register', async (req, res) => {
     // console.log('req body - ', req.body)
@@ -174,20 +182,25 @@ app.post('/addFriend', async (req, res) => {
 
 // 读取聊天聊天记录
 app.post('/chatData', async (req, res) => {
-    const { chat_table } = req.body
-    // console.log('cahtdata -> ', chat_table)
+    const { chat_table, offset } = req.body
+    // console.log('cahtdata -> ', chat_table, offset)
     if (!chat_table) return res.send([])
 
-    const data = await find(chat_table)
+    // const data = await find(chat_table)
+    const [err, data] = await to(knex(chat_table).select("*").orderBy('id', 'desc').offset(offset || 0).limit(20))
+    if (err) {
+        console.log('limit err -> ', err)
+        return res.send([])
+    }
     // console.log('data -> ', data)
     if (!data) return res.send([])
-    return res.send(data)
+    return res.send(data?.reverse() ?? [])
 })
 
 // 读未读信息
 app.post('/unread', async (req, res) => {
     const { friends, user_id } = req.body
-    console.log('friends -> ', friends)
+    // console.log('friends -> ', friends)
     if (!friends || !Array.isArray(friends)) return res.send('err')
     if (!user_id || typeof user_id !== 'string') return res.send('err')
     const resultOb = {}
@@ -204,6 +217,10 @@ app.post('/unread', async (req, res) => {
             const [zerr, zdata] = await to(find(table_id))
             if (zerr) continue
             let resData = zdata?.pop()
+            // 将最后一条的聊天记录的未读信息删除
+            // 因为获取最后一条信息的场景不是因为未读
+            // 而是为了提示用户的上次最后一次聊天内容
+            delete resData?.unread
             resultOb[table_id] = [resData]
             continue
         }
