@@ -119,6 +119,7 @@ app.post('/login', async (req, res) => {
         }
         return res.send(data)
     }
+    if (list[0].password !== password) return res.send('pw_err')
     res.send('err')
 })
 
