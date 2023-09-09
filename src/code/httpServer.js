@@ -215,7 +215,7 @@ app.post('/unread', async (req, res) => {
         }   
         
         if (!fdata || !fdata?.length) {
-            const [zerr, zdata] = await to(find(table_id))
+            const [zerr, zdata] = await to(knex(table_id).select("*").orderBy('id', 'desc').limit(1))
             if (zerr) continue
             let resData = zdata?.pop()
             // 将最后一条的聊天记录的未读信息删除
