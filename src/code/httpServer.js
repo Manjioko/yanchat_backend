@@ -112,6 +112,11 @@ app.post('/login', async (req, res) => {
     console.log('req body - ', req.body)
     const { password, phone_number } = req.body
     const list = await find('user_info', 'phone_number', phone_number)
+    // console.log('list ->', list[0])
+    if (wsClients[list[0].user_id]) {
+        console.log('repeat: ', list[0].user_id)
+        return res.send('repeat')
+    }
     if (list.length && list[0].password === password) {
         const data = {
             ...list[0],
