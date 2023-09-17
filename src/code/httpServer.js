@@ -2,10 +2,11 @@ import express from 'express'
 import path, { basename } from 'path'
 import fs from 'fs'
 import http from 'http'
-import multer from 'multer'
 import bodyParser from 'body-parser'
+import multer from 'multer'
 import { v4 as uuidv4 } from 'uuid'
 import { to } from 'await-to-js'
+import imgHandler from '../ulits/imgHandler.js'
 import { find, insert, update, createTable } from '../dataBase/operator_data_base.js'
 import fliterProperty from '../ulits/fliterPropertyByObject.js'
 
@@ -16,26 +17,9 @@ const server = http.createServer(app)
 // 处理 post 请求
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
-const storage = multer.diskStorage({
-    // 用来配置文件上传的位置
-    destination: (req, file, cb) => {
-        // 调用 cb 即可实现上传位置的配置
-        cb(null, fp('../../public/'))
-    },
-
-    // 用来配置上传文件的名称（包含后缀）
-    filename: (req, file, cb) => {
-        //filename 用于确定文件夹中的文件名的确定。 如果没有设置 filename，每个文件将设置为一个随机文件名，并且是没有扩展名的。
-        // 获取文件的后缀
-        let ext = path.extname(file.originalname)
-        let basename = path.basename(file.originalname, ext)
-        // 拼凑文件名
-        cb(null, basename + '-' + Date.now() + ext)
-    }
-})
-const upload = multer({ storage })
 
 app.use('/', express.static(path.join(fp('../../public/'))))
+app.use('/avatar', express.static(path.join(fp('../../avatar/'))))
 
 //设置允许跨域访问该服务.
 app.all('*', function (req, res, next) {
@@ -68,11 +52,74 @@ app.post('/getFriends', async (req, res) => {
 
     res.send('err')
 })
-
 // 上传文件
-app.post('/uploadFile', upload.single('file'), (req, res) => {
-    console.log(req.file.filename, ' 已经上传。')
-    res.send(req.file.filename)
+app.post('/uploadFile',(req, res) => {
+    // console.log(req.file.filename, ' 已经上传。')
+    const storage = multer.diskStorage({
+        // 用来配置文件上传的位置
+        destination: (req, file, cb) => {
+            console.log('req -> ', req.body.user_id)
+            // 调用 cb 即可实现上传位置的配置
+            cb(null, fp('../../public/'))
+        },
+    
+        // 用来配置上传文件的名称（包含后缀）
+        filename: (req, file, cb) => {
+            //filename 用于确定文件夹中的文件名的确定。 如果没有设置 filename，每个文件将设置为一个随机文件名，并且是没有扩展名的。
+            // 获取文件的后缀
+            let ext = path.extname(file.originalname)
+            let basename = path.basename(file.originalname, ext)
+            // 拼凑文件名
+            cb(null, basename + '-' + Date.now() + ext)
+        }
+    })
+    const upload = multer({ storage }).single('file')
+    upload(req, res, (err) => {
+        if (err) {
+            console.log('false err -> ', err)
+            return res.send('err')
+        }
+        console.log(req.file.filename, ' 已经上传。')
+        res.send(req.file.filename)
+    })
+})
+
+app.post('/uploadAvatar',(req, res) => {
+    // console.log('req res -> ', req.body)
+    const storage = multer.diskStorage({
+        // 用来配置文件上传的位置
+        destination: (req, file, cb) => {
+            // console.log('req -> ', req.body)
+            // 调用 cb 即可实现上传位置的配置
+            cb(null, fp('../../avatar/'))
+        },
+    
+        // 用来配置上传文件的名称（包含后缀）
+        filename: (req, file, cb) => {
+            //filename 用于确定文件夹中的文件名的确定。 如果没有设置 filename，每个文件将设置为一个随机文件名，并且是没有扩展名的。
+            const user_id = req.body.user_id
+            // 获取文件的后缀
+            let ext = path.extname(file.originalname)
+            let basename = path.basename(file.originalname, ext)
+            // 拼凑文件名
+            cb(null, 'avatar_' + user_id + ext)
+        }
+    })
+    const upload = multer({ storage }).single('avatar')
+    upload(req, res, (err) => {
+        if (err) {
+            console.log('avatar err -> ', err)
+            return
+        }
+        console.log(req.file.filename,req.body.user_id, ' avatar 已经上传。')
+        update('user_info', 'user_id', req.body.user_id, {
+            avatar_url: req.file.filename
+        })
+        // console.log('fp -> ', fp(`../../avatar/${req.file.filename}`))
+        imgHandler(fp(`../../avatar/${req.file.filename}`), fp(`../../avatar/avatar_${req.body.user_id}.jpg`))
+        res.send(req.file.filename)
+    })
+
 })
 
 // 客户端获取文件
@@ -122,6 +169,8 @@ app.post('/login', async (req, res) => {
             ...list[0],
             password: null,
         }
+
+        console.log('login -> ', data)
         return res.send(data)
     }
     // console.log('list', list)
