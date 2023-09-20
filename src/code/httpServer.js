@@ -156,10 +156,11 @@ app.post('/register', async (req, res) => {
 
 // 登录
 app.post('/login', async (req, res) => {
-    console.log('req body - ', req.body)
+    // console.log('req body - ', req.body)
     const { password, phone_number } = req.body
     const list = await find('user_info', 'phone_number', phone_number)
-    // console.log('list ->', list[0])
+    console.log('list ->', list[0])
+    if (!list.length) return res.send('err')
     if (wsClients[list[0].user_id]) {
         console.log('repeat: ', list[0].user_id)
         return res.send('repeat')
@@ -170,7 +171,7 @@ app.post('/login', async (req, res) => {
             password: null,
         }
 
-        console.log('login -> ', data)
+        // console.log('login -> ', data)
         return res.send(data)
     }
     // console.log('list', list)
@@ -289,6 +290,48 @@ app.post('/unread', async (req, res) => {
     res.send(resultOb)
 })
 
+// 修改昵称
+app.post('/changeNickName', async(req, res) => {
+    const {phone_number, nick_name} = req.body
+    console.log('phone_number -> ', phone_number, nick_name)
+    if (!phone_number) return res.send('err')
+    const [ferr, data] = await to(find('user_info', 'phone_number', phone_number))
+    if (ferr) {
+        console.log('changeNickName error -> ', ferr)
+        return res.send('err')
+    }
+    if (!nick_name) return res.send('err')
+    if (!data.length) return res.send('err')
+
+    const [uerr, result] = await to(update('user_info', 'phone_number', phone_number, {
+        user: nick_name
+    }))
+    const friends = JSON.parse(data[0].friends)
+    if (!friends) return res.send('err')
+    for (const item of friends) {
+        const [getFriDataErr, friDataList] =  await to(find('user_info', 'user_id', item.user_id))
+        if (getFriDataErr) {
+            console.log('fri err -> ', getFriDataErr)
+            return res.send('err')
+        }
+        if (!friDataList.length) continue
+        const friDataFriends = JSON.parse(friDataList[0].friends)
+        for (const f of friDataFriends) {
+            if (f.phone_number === phone_number) {
+                f.user = nick_name
+                break
+            }
+        }
+        await update('user_info', 'user_id', item.user_id, {
+            friends: JSON.stringify(friDataFriends)
+        })
+    }
+    console.log('改名结果 -> ', result)
+
+    if (uerr) return res.send('err')
+    
+    res.send('ok')
+})
 // http
 server.listen(9999, () => {
     console.log('http server is listening on *:9999')
