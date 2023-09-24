@@ -4,11 +4,7 @@ import { v4 as uuidv4 } from 'uuid'
 import path from 'path'
 import { find } from '../dataBase/operator_data_base.js'
 const dataBase = '../dataBase/'
-globalThis.fp = p => {
-    let resPath = new URL(p, import.meta.url).pathname
-    return resPath
-}
-const wss = new WebSocketServer({ port: 8000 })
+const wss = new WebSocketServer({ server: $httpServer })
 if (!globalThis.wsClients) {
     globalThis.wsClients = {}
 }

@@ -13,7 +13,7 @@ import fliterProperty from '../ulits/fliterPropertyByObject.js'
 const __dirname = path.resolve()
 const app = express()
 const server = http.createServer(app)
-
+globalThis.$httpServer = server
 // 处理 post 请求
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
@@ -39,7 +39,7 @@ app.get('/', (req, res) => {
 
 // 获取好友列表
 app.post('/getFriends', async (req, res) => {
-    const { user_id } = req.body
+    const { user_id, get_user_info } = req.body
 
     if (!user_id) {
         return res.send('err')
@@ -47,7 +47,7 @@ app.post('/getFriends', async (req, res) => {
 
     const list = await find('user_info', 'user_id', user_id)
     if (list && list.length) {
-        return res.send(list[0].friends)
+        return get_user_info ? res.send(fliterProperty(list[0], ['password', 'group'])) : res.send(list[0].friends)
     }
 
     res.send('err')
