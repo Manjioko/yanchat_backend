@@ -84,6 +84,7 @@ app.post('/uploadFile',(req, res) => {
     })
 })
 
+// 更换头像
 app.post('/uploadAvatar',(req, res) => {
     // console.log('req res -> ', req.body)
     const storage = multer.diskStorage({
@@ -102,11 +103,11 @@ app.post('/uploadAvatar',(req, res) => {
             let ext = path.extname(file.originalname)
             let basename = path.basename(file.originalname, ext)
             // 拼凑文件名
-            cb(null, 'avatar_' + user_id + ext)
+            cb(null, 'avatar_' + user_id + new Date().getTime() + ext)
         }
     })
     const upload = multer({ storage }).single('avatar')
-    upload(req, res, (err) => {
+    upload(req, res, async (err) => {
         if (err) {
             console.log('avatar err -> ', err)
             return
@@ -116,7 +117,10 @@ app.post('/uploadAvatar',(req, res) => {
             avatar_url: req.file.filename
         })
         // console.log('fp -> ', fp(`../../avatar/${req.file.filename}`))
-        imgHandler(fp(`../../avatar/${req.file.filename}`), fp(`../../avatar/avatar_${req.body.user_id}.jpg`))
+        const [imgErr, result] = await to(imgHandler(fp(`../../avatar/${req.file.filename}`), fp(`../../avatar/avatar_${req.body.user_id}.jpg`)))
+        if (imgErr) {
+            return res.send('err')
+        }
         res.send(req.file.filename)
     })
 
