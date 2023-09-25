@@ -310,8 +310,8 @@ app.post('/changeNickName', async(req, res) => {
     const [uerr, result] = await to(update('user_info', 'phone_number', phone_number, {
         user: nick_name
     }))
-    const friends = JSON.parse(data[0].friends)
-    if (!friends) return res.send('err')
+    const friends = JSON.parse(data[0].friends) || []
+    // if (!friends) return res.send('err')
     for (const item of friends) {
         const [getFriDataErr, friDataList] =  await to(find('user_info', 'user_id', item.user_id))
         if (getFriDataErr) {
