@@ -7,7 +7,7 @@ import multer from 'multer'
 import { v4 as uuidv4 } from 'uuid'
 import { to } from 'await-to-js'
 import imgHandler from '../ulits/imgHandler.js'
-import { find, insert, update, createTable } from '../dataBase/operator_data_base.js'
+import { find, insert, update, createTable, findColumnName, add } from '../dataBase/operator_data_base.js'
 import fliterProperty from '../ulits/fliterPropertyByObject.js'
 
 const __dirname = path.resolve()
@@ -142,16 +142,21 @@ app.post('/register', async (req, res) => {
     if (findResult.length) {
         return res.send('exist')
     }
+    const user_id = uuidv4()
     const data = {
         user: req.body.phone_number,
         password: req.body.password,
-        user_id: uuidv4(),
+        user_id,
         phone_number: req.body.phone_number,
         friends: null,
         group: null,
         avatar_url: null,
     }
     const insertResult = insert('user_info', data)
+    // 设置默认头像
+    const readStream = fs.createReadStream(fp(`../../avatar/avatar_default.jpg`))
+    const writeStream = fs.createWriteStream(fp(`../../avatar/avatar_${user_id}.jpg`))
+    readStream.pipe(writeStream)
     if (insertResult) {
         return res.send(data)
     }
@@ -335,6 +340,19 @@ app.post('/changeNickName', async(req, res) => {
     if (uerr) return res.send('err')
     
     res.send('ok')
+})
+
+// 用户 Markdown 使用权限
+app.post('/isUseMd', async(req, res) => {
+    const { is_use_md, user_id } = req.body
+    // console.log('req -> ', is_use_md, user_id)
+    if (!user_id) return res.send('err')
+    // const hasIsUseMd = await findColumnName('user_info', 'is_use_md')
+    update('user_info', 'user_id', user_id, {
+        is_use_md: is_use_md
+    })
+    return res.send(true)
+    res.send(true)
 })
 // http
 server.listen(9999, () => {

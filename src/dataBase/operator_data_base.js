@@ -99,6 +99,42 @@ export async function add(tableName, tableStr, isNotNull) {
     return res
 }
 
+// 查询表中是否存在某个列字段
+export async function findColumnName(tableName, columnName) {
+    // 查询表的元数据信息来检查是否存在列
+    const [err, res] = await to(new Promise((resolve, reject) => {
+        knex('sqlite_master')
+        .select('sql')
+        .where('type', 'table')
+        .where('name', tableName)
+        .then(rows => {
+            if (rows.length > 0) {
+                // 解析表的 CREATE TABLE 语句
+                const createTableSQL = rows[0].sql;
+                // 使用正则表达式来检查是否存在列
+                const columnExists = new RegExp(`\\b${columnName}\\b`, 'i').test(createTableSQL)
+
+                if (columnExists) {
+                    console.log(`Column '${columnName}' exists in table '${tableName}'.`)
+                    resolve(true)
+                } else {
+                    console.log(`Column '${columnName}' does not exist in table '${tableName}'.`)
+                    reject(`Column '${columnName}' does not exist in table '${tableName}'.`)
+                }
+            } else {
+                console.log(`Table '${tableName}' does not exist.`)
+                reject(`Table '${tableName}' does not exist.`)
+            }
+        }).catch(err => {
+            console.log(`findColumnName 发生错误 -> ${err}`)
+            reject(`findColumnName 发生错误 -> ${err}`)
+        })
+    }))
+
+    if (err) return false
+    return res
+}
+
 // 数据更新
 export async function update(tableName, tableStr, findStr, updateObject) {
     const [err, res] = await to(knex(tableName).where(tableStr, findStr).update(updateObject))
