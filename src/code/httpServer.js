@@ -58,7 +58,7 @@ app.post('/uploadFile',(req, res) => {
     const storage = multer.diskStorage({
         // 用来配置文件上传的位置
         destination: (req, file, cb) => {
-            console.log('req -> ', req.body.user_id)
+            // console.log('req -> ', req.body.user_id)
             // 调用 cb 即可实现上传位置的配置
             cb(null, fp('../../public/'))
         },
@@ -116,8 +116,9 @@ app.post('/uploadAvatar',(req, res) => {
         update('user_info', 'user_id', req.body.user_id, {
             avatar_url: req.file.filename
         })
-        // console.log('fp -> ', fp(`../../avatar/${req.file.filename}`))
-        const [imgErr, result] = await to(imgHandler(fp(`../../avatar/${req.file.filename}`), fp(`../../avatar/avatar_${req.body.user_id}.jpg`)))
+        const inputPath = fp(`../../avatar/${req.file.filename}`)
+        const outputPath = fp(`../../avatar/avatar_${req.body.user_id}.jpg`)
+        const [imgErr, result] = await to(imgHandler(inputPath, outputPath))
         if (imgErr) {
             return res.send('err')
         }
@@ -129,9 +130,8 @@ app.post('/uploadAvatar',(req, res) => {
 // 客户端获取文件
 app.post('/getFile', async (req, res) => {
     const { filename } = req.body
-    console.log('-> ', fp('../../public/' + decodeURIComponent(filename)))
     if (!filename || typeof filename !== 'string') return res.send('res')
-    res.sendFile(decodeURIComponent(fp('../../public/' + filename)))
+    res.sendFile(fp('../../public/' + filename))
 })
 
 // 注册

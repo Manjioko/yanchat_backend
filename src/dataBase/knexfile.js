@@ -3,7 +3,12 @@ import { find } from "./operator_data_base.js"
 const tableName = 'user_info'
 globalThis.fp = p => {
     let resPath = new URL(p, import.meta.url).pathname
-    return resPath
+    if (process.platform === 'win32') {
+        resPath = resPath.slice(1)
+    } else {
+        resPath = resPath
+    }
+    return decodeURIComponent(resPath)
 }
 const k = knex({
     client: 'sqlite3',
