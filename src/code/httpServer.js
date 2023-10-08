@@ -9,12 +9,14 @@ import { to } from 'await-to-js'
 import imgHandler from '../ulits/imgHandler.js'
 import { find, insert, update, createTable, findColumnName, add } from '../dataBase/operator_data_base.js'
 import fliterProperty from '../ulits/fliterPropertyByObject.js'
+import cors from 'cors'
 
 const __dirname = path.resolve()
 const app = express()
 const server = http.createServer(app)
 globalThis.$httpServer = server
 // 处理 post 请求
+app.use(cors())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
@@ -22,15 +24,20 @@ app.use('/', express.static(path.join(fp('../../public/'))))
 app.use('/avatar', express.static(path.join(fp('../../avatar/'))))
 
 //设置允许跨域访问该服务.
-app.all('*', function (req, res, next) {
-    res.header('Access-Control-Allow-Origin', '*')
-    res.header("Access-Control-Allow-Headers", "X-Requested-With")
-    res.header('Access-Control-Allow-Headers', 'Content-Type')
-    res.header('Access-Control-Allow-Methods', '*')
-    res.header('Content-Type', 'text/html;charset=utf-8')
-    res.header('Cache-Control', 'max-age=1000, no-store')
-    next();
-});
+// app.all('*', function (req, res, next) {
+//     res.header('Access-Control-Allow-Origin', '*')
+//     // res.header("Access-Control-Allow-Headers", "X-Requested-With")
+//     res.header('Access-Control-Allow-Headers', 'Content-Type')
+//     res.header('Access-Control-Allow-Methods', '*')
+//     // res.header('Content-Type', 'text/html;charset=utf-8')
+//     // res.header('Cache-Control', 'max-age=1000, no-store')
+//     if (req.method === 'OPTIONS') {
+//         res.header('Access-Control-Allow-Methods', '*'); // 或者添加其他允许的HTTP方法
+//         res.status(204).end(); // 返回204 No Content状态码
+//         return;
+//     }
+//     next();
+// });
 
 // 返回主页面，主页面需要挂载在此处
 app.get('/', (req, res) => {
@@ -168,7 +175,7 @@ app.post('/login', async (req, res) => {
     // console.log('req body - ', req.body)
     const { password, phone_number } = req.body
     const list = await find('user_info', 'phone_number', phone_number)
-    console.log('list ->', list[0])
+    // console.log('list ->', list[0])
     if (!list.length) return res.send('err')
     if (wsClients[list[0].user_id]) {
         console.log('repeat: ', list[0].user_id)
