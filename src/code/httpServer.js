@@ -228,7 +228,9 @@ app.post('/addFriend', async (req, res) => {
     createTable(chat_table, [
         { data: 'user_id', notNull: true, type: 'text' },
         { data: 'chat', notNull: false, type: 'text' },
-        { data: 'unread', notNull: true, type: 'boolean' }
+        { data: 'unread', notNull: true, type: 'boolean' },
+        { data: 'withdrew', notNull: false, type: 'boolean' },
+        { data: 'delete', notNull: false, type: 'boolean' }
     ])
     
     // 第三部， 存在用户，开始添加好友
@@ -360,6 +362,43 @@ app.post('/isUseMd', async(req, res) => {
     })
     return res.send(true)
     res.send(true)
+})
+
+// 用户删除撤回功能
+app.post('/deleteMessage', async(req, res) => {
+    const { chat_table, type, index, to_id } = req.body
+    console.log('chat_table -> ', chat_table, type, index, to_id)
+    if (!chat_table || !type) return res.send('err')
+    // deleteMessage(chat_table_id, type)
+    const [err, isExist] = await to(findColumnName(chat_table, type))
+    if (err) {
+        console.log('err -> ', err)
+    }
+    if (!isExist) {
+        const [addErr] = await to(knex.schema.table(chat_table, t => {
+            t.boolean(type).defaultTo(false)
+        }))
+        if (addErr) {
+            console.log('addErr -> ', addErr)
+        }
+    }
+    if (type === 'delete') {
+        console.log('delete -> ', index)
+        update(chat_table, 'id', index, {
+            delete: true
+        })
+    } else {
+        console.log('withdrew -> ', index)
+        update(chat_table, 'id', index, {
+            withdrew: true
+        })
+        wsClients[to_id]?.send(JSON.stringify({
+            type: 'withdrew',
+            to_id,
+            index
+        }))
+    }
+    res.sendStatus(200)
 })
 // http
 server.listen(9999, () => {
