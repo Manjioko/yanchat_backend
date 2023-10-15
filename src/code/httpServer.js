@@ -366,36 +366,36 @@ app.post('/isUseMd', async(req, res) => {
 
 // 用户删除撤回功能
 app.post('/deleteMessage', async(req, res) => {
-    const { chat_table, type, index, to_id } = req.body
-    console.log('chat_table -> ', chat_table, type, index, to_id)
-    if (!chat_table || !type) return res.send('err')
-    // deleteMessage(chat_table_id, type)
-    const [err, isExist] = await to(findColumnName(chat_table, type))
+    const { chat, type } = req.body
+    console.log('chat data -> ', chat)
+    console.log('type -> ', type)
+    const [err, data] = await to(knex(chat.to_table).select('*').where('chat', 'like', `%${chat.time}%`))
     if (err) {
         console.log('err -> ', err)
+        return res.send('err')
     }
-    if (!isExist) {
-        const [addErr] = await to(knex.schema.table(chat_table, t => {
-            t.boolean(type).defaultTo(false)
-        }))
-        if (addErr) {
-            console.log('addErr -> ', addErr)
-        }
+    // console.log('data -> ', data)
+    if (data.length > 1) {
+        const realData = data.find(item => item.chat.includes(chat.text))
+        if (!realData) return res.send('err')
+        // await update(chat.to_table, 'id', realData.id, {
+        //     chat: JSON.stringify(chat)
+        // })
+        // return res.send('ok')
     }
-    if (type === 'delete') {
-        console.log('delete -> ', index)
-        update(chat_table, 'id', index, {
-            delete: true
-        })
-    } else {
-        console.log('withdrew -> ', index)
-        update(chat_table, 'id', index, {
-            withdrew: true
-        })
-        wsClients[to_id]?.send(JSON.stringify({
-            type: 'withdrew',
-            to_id,
-            index
+    if (data.length === 1) {
+        // await update(chat.to_table, 'id', data[0].id, {
+        //     chat: JSON.stringify(chat)
+        // })
+        // return res.send('ok')
+    }
+
+    if (type === 'withdraw') {
+        // console.log('----', chat)
+        wsClients[chat.to_id]?.send(JSON.stringify({
+            type,
+            user_id: chat.user_id,
+            chat,
         }))
     }
     res.sendStatus(200)
