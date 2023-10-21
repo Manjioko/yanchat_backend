@@ -161,7 +161,7 @@ app.post('/register', async (req, res) => {
     }
     const insertResult = insert('user_info', data)
     // 设置默认头像
-    const readStream = fs.createReadStream(fp(`../../avatar/avatar_default.jpg`))
+    const readStream = fs.createReadStream(fp(`../../avatar/avatar_default.png`))
     const writeStream = fs.createWriteStream(fp(`../../avatar/avatar_${user_id}.jpg`))
     readStream.pipe(writeStream)
     if (insertResult) {
@@ -229,8 +229,6 @@ app.post('/addFriend', async (req, res) => {
         { data: 'user_id', notNull: true, type: 'text' },
         { data: 'chat', notNull: false, type: 'text' },
         { data: 'unread', notNull: true, type: 'boolean' },
-        { data: 'withdrew', notNull: false, type: 'boolean' },
-        { data: 'delete', notNull: false, type: 'boolean' }
     ])
     
     // 第三部， 存在用户，开始添加好友
@@ -290,7 +288,7 @@ app.post('/unread', async (req, res) => {
         
         if (!fdata || !fdata?.length) {
             const [zerr, zdata] = await to(knex(table_id).select("*").orderBy('id', 'desc').limit(1))
-            if (zerr) continue
+            if (zerr || !zdata.length) continue
             let resData = zdata?.pop()
             // 将最后一条的聊天记录的未读信息删除
             // 因为获取最后一条信息的场景不是因为未读
@@ -299,7 +297,7 @@ app.post('/unread', async (req, res) => {
             // resultOb[table_id] = [resData]
             resultOb[table_id] = {
                 unread: 0,
-                chat: JSON.parse(resData.chat)
+                chat: JSON.parse(resData?.chat ?? {})
             }
             continue
         }
@@ -371,42 +369,53 @@ app.post('/isUseMd', async(req, res) => {
     res.send(true)
 })
 
-// 用户删除撤回功能
-app.post('/deleteMessage', async(req, res) => {
-    const { chat, type } = req.body
-    console.log('chat data -> ', chat)
-    console.log('type -> ', type)
-    const [err, data] = await to(knex(chat.to_table).select('*').where('chat', 'like', `%${chat.time}%`))
-    if (err) {
-        console.log('err -> ', err)
-        return res.send('err')
-    }
-    // console.log('data -> ', data)
-    if (data.length > 1) {
-        const realData = data.find(item => item.chat.includes(chat.text))
-        if (!realData) return res.send('err')
-        // await update(chat.to_table, 'id', realData.id, {
-        //     chat: JSON.stringify(chat)
-        // })
-        // return res.send('ok')
-    }
-    if (data.length === 1) {
-        // await update(chat.to_table, 'id', data[0].id, {
-        //     chat: JSON.stringify(chat)
-        // })
-        // return res.send('ok')
-    }
-
-    if (type === 'withdraw') {
-        // console.log('----', chat)
-        wsClients[chat.to_id]?.send(JSON.stringify({
-            type,
-            user_id: chat.user_id,
-            chat,
-        }))
-    }
-    res.sendStatus(200)
+// 删除聊天记录
+app.post('/deleteChat', async(req, res) => {
+    const { chat } = req.body
+    const { to_table, chat_id, to_id } = chat
+    if (!to_table || !chat_id || !to_id) return res.send('err')
+    knex(to_table)
+    .where('chat','like', `%${chat_id}%`)
+    .del()
+    .then(() => {
+        // console.log('删除成功')
+        chat.receivedType = 'deleted'
+        wsClients[chat.to_id]?.send(JSON.stringify(chat))
+        if (chat.type !== 'text') {
+            try {
+                fs.unlink(fp('../../public/' + chat.response), (unlinkError) => {
+                    if (unlinkError) {
+                        console.error('清除被删除的文件失败:', unlinkError)
+                    } else {
+                        console.log('清除成功')
+                    }
+                })
+            } catch (err) {
+                console.log('Catch err 清除被删除的文件失败:', err)
+            }
+        }
+    }).catch((err) => {
+        console.log('删除聊天记录 err -> ', err)
+    })
+    res.send('ok')
 })
+
+// 更新聊天记录
+app.post('/updateChat', async(req, res) => {
+    const { chat } = req.body
+    const { to_table, chat_id } = chat
+    if (!to_table || !chat_id) return res.send('err')
+    knex(to_table)
+    .where('chat','like', `%${chat_id}%`)
+    .update({chat: JSON.stringify(chat)})
+    .then(() => {
+        console.log('更新成功')
+    }).catch((err) => {
+        console.log('更新聊天记录 err -> ', err)
+    })
+    res.send('ok')
+})
+
 // http
 server.listen(9999, () => {
     console.log('http server is listening on *:9999')
