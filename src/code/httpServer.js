@@ -229,6 +229,7 @@ app.post('/addFriend', async (req, res) => {
         { data: 'user_id', notNull: true, type: 'text' },
         { data: 'chat', notNull: false, type: 'text' },
         { data: 'unread', notNull: true, type: 'boolean' },
+        { data: 'del_flag', notNull: false, type: 'text' },
     ])
     
     // 第三部， 存在用户，开始添加好友
@@ -255,12 +256,12 @@ app.post('/addFriend', async (req, res) => {
 
 // 读取聊天聊天记录
 app.post('/chatData', async (req, res) => {
-    const { chat_table, offset } = req.body
+    const { chat_table, offset, limit } = req.body
     // console.log('cahtdata -> ', chat_table, offset)
     if (!chat_table) return res.send([])
 
     // const data = await find(chat_table)
-    const [err, data] = await to(knex(chat_table).select("*").orderBy('id', 'desc').offset(offset || 0).limit(20))
+    const [err, data] = await to(knex(chat_table).select("*").orderBy('id', 'desc').offset(offset || 0).limit(limit || 20))
     if (err) {
         console.log('limit err -> ', err)
         return res.send([])
@@ -408,8 +409,35 @@ app.post('/updateChat', async(req, res) => {
     knex(to_table)
     .where('chat','like', `%${chat_id}%`)
     .update({chat: JSON.stringify(chat)})
-    .then(() => {
+    .then(async () => {
         console.log('更新成功')
+        try {
+            // const updatedChat = await to(knex(to_table).select('*').where('chat','like', `%${chat_id}%`))
+            // const chat = JSON.parse(updatedChat[1][0].chat)
+            // 如果客户双方都删除了文件,那证明这个文件永远都不会再被客户使用,所以应该删除
+            // if (chat.del_self && chat.del_other && chat.type !== 'text') {
+            //     try {
+            //         knex(to_table)
+            //         .where('chat','like', `%${chat_id}%`)
+            //         .del()
+            //         .then(() => {
+            //             console.log('删除聊天记录成功 !text')
+            //         })
+            //         fs.unlink(fp('../../public/' + chat.response), (unlinkError) => {
+            //             if (unlinkError) {
+            //                 console.error('清除被删除的文件失败:', unlinkError)
+            //             } else {
+            //                 console.log('清除成功')
+            //             }
+            //         })
+            //     } catch (err) {
+            //         console.log('Catch err 清除被删除的文件失败:', err)
+            //     }
+            // }
+        } catch(err) {
+            console.log('尝试删除动作 err -> ', err)
+        }
+
     }).catch((err) => {
         console.log('更新聊天记录 err -> ', err)
     })
