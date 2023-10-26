@@ -396,9 +396,35 @@ app.post('/isUseMd', async(req, res) => {
 
 // 删除聊天记录
 app.post('/deleteChat', async(req, res) => {
-    const { chat } = req.body
+    const { chat, del_flag } = req.body
+    // if (typeof chat === 'string') chat = JSON.parse(chat)
     const { to_table, chat_id, to_id } = chat
     if (!to_table || !chat_id || !to_id) return res.send('err')
+
+    if (del_flag) {
+        const [del_err, del_data] = await to(
+            knex(to_table)
+            .where('chat','like', `%${chat_id}%`)
+            .where(function() {
+                this.whereNull('del_flag').orWhere('del_flag', '=', del_flag)
+            })
+        )
+        if (del_err) {
+            console.log('del err -> ', del_err)
+            return res.send('err')
+        }
+
+        if (del_data.length) {
+            // console.log('update -> ', del_data)
+            if (!del_data[0].del_flag) {
+                await update(to_table, 'id', del_data[0].id, {
+                    del_flag,
+                })
+            }
+
+            return res.send('ok')
+        }
+    }
     knex(to_table)
     .where('chat','like', `%${chat_id}%`)
     .del()
