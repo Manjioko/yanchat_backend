@@ -303,16 +303,30 @@ app.post('/unread', async (req, res) => {
     if (!user_id || typeof user_id !== 'string') return res.send('err')
     const resultOb = {}
     for (const table_id of friends) {
-        const [ferr, fdata] = await to(knex(table_id).select('*').where(function() {
-            this.where('unread', true).whereNot('user_id', user_id)
-        }))
+        const [ferr, fdata] = await to(
+            knex(table_id)
+            .select('*')
+            .where(function() {
+                this.where('unread', true)
+                .whereNot('user_id', user_id)
+            })
+        )
         if (ferr) {
             console.log('ferr -> ', ferr)
             continue
         }   
         
         if (!fdata || !fdata?.length) {
-            const [zerr, zdata] = await to(knex(table_id).select("*").orderBy('id', 'desc').limit(1))
+            const [zerr, zdata] = await to(
+                knex(table_id)
+                .select("*")
+                .where(function() {
+                    this.whereNull('del_flag')
+                    .orWhere('del_flag', '!=', user_id)
+                })
+                .orderBy('id', 'desc')
+                .limit(1)
+            )
             if (zerr || !zdata.length) continue
             let resData = zdata?.pop()
             // 将最后一条的聊天记录的未读信息删除
@@ -328,8 +342,8 @@ app.post('/unread', async (req, res) => {
         }
 
         resultOb[table_id] = {
-            unread: 0,
-            chat: JSON.parse(fdata[0].chat)
+            unread: fdata.length,
+            chat: JSON.parse(fdata[fdata.length - 1].chat)
         }
         await to(knex(table_id).where(function() {
             this.where('unread', true).whereNot('user_id', user_id)
