@@ -286,11 +286,11 @@ app.post('/chatData', async (req, res) => {
         return res.send({})
     }
     // console.log('data -> ', data)
-    if (!data) return res.send({})
+    if (!data) return res.send({offset: 0, chat: []})
     const resData = data.reverse()
     const resOb = {
         offset: resData[0]?.id || 0,
-        data: resData,
+        data: resData || [],
     }
     return res.send(resOb)
 })
