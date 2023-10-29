@@ -194,10 +194,10 @@ app.post('/login', async (req, res) => {
         }
 
         // console.log('login -> ', data)
-        const token = jwt.sign({ phone_number, password }, screteKey, { expiresIn: '300s' })
-        const refreshToken = jwt.sign({ phone_number, password }, screteKey, { expiresIn: '350s' })
-        res.cookie('token', token, { maxAge: 300000, httpOnly: true})
-        res.cookie('refreshToken', token, { httpOnly: true })
+        const token = jwt.sign({ phone_number, password }, screteKey, { expiresIn: '10s' })
+        const refreshToken = jwt.sign({ phone_number, password }, screteKey, { expiresIn: '1h' })
+        res.cookie('token', token, { maxAge: 10000, httpOnly: true})
+        res.cookie('refreshToken', token)
         return res.send(data)
     }
     // console.log('list', list)
