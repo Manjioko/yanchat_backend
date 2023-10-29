@@ -10,6 +10,11 @@ import imgHandler from '../ulits/imgHandler.js'
 import { find, insert, update, createTable, findColumnName, add } from '../dataBase/operator_data_base.js'
 import fliterProperty from '../ulits/fliterPropertyByObject.js'
 import cors from 'cors'
+import cookieParser from 'cookie-parser'
+import auth from '../ulits/auth.js'
+import jwt from 'jsonwebtoken'
+import { screteKey } from '../ulits/auth.js'
+
 
 const __dirname = path.resolve()
 const app = express()
@@ -17,6 +22,7 @@ const server = http.createServer(app)
 globalThis.$httpServer = server
 // 处理 post 请求
 app.use(cors())
+app.use(cookieParser())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
@@ -42,7 +48,7 @@ app.use('/avatar', express.static(path.join(fp('../../avatar/'))))
 // 返回主页面，主页面需要挂载在此处
 app.get('/', (req, res) => {
     res.sendFile(fp('../../public/index.html'))
-});
+})
 
 // 获取好友列表
 app.post('/getFriends', async (req, res) => {
@@ -188,6 +194,10 @@ app.post('/login', async (req, res) => {
         }
 
         // console.log('login -> ', data)
+        const token = jwt.sign({ phone_number, password }, screteKey, { expiresIn: '300s' })
+        const refreshToken = jwt.sign({ phone_number, password }, screteKey, { expiresIn: '350s' })
+        res.cookie('token', token, { maxAge: 300000, httpOnly: true})
+        res.cookie('refreshToken', token, { httpOnly: true })
         return res.send(data)
     }
     // console.log('list', list)
@@ -255,7 +265,7 @@ app.post('/addFriend', async (req, res) => {
 })
 
 // 读取聊天记录
-app.post('/chatData', async (req, res) => {
+app.post('/chatData', auth, async (req, res) => {
     const { chat_table, offset, limit, user_id } = req.body
     // console.log('cahtdata -> ', chat_table, offset)
     if (!chat_table || !user_id) return res.send({})
