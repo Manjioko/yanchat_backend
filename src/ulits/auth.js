@@ -39,5 +39,17 @@ function auth(req, res, next) {
 function setToken(data, time = '5s', key = screteKey) {
   return jwt.sign(data, key, { expiresIn: time })
 }
+function verify(token, key = screteKey) {
+  return new Promise((resolve, reject) => {
+    jwt.verify(token, key, (err, user) => {
+      if (!err) {
+        // console.log('验证成功!!!')
+        resolve(user)
+      } else {
+        reject(err)
+      }
+    })
+  })
+}
 
-export { setToken, auth }
+export { setToken, auth, verify }
