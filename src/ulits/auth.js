@@ -1,39 +1,43 @@
 import jwt from 'jsonwebtoken'
 
 const screteKey = '74ec5a8b-c3a3-474b-96ea-21720a47ac68'
-export default function auth(req, res, next) {
-  console.log('token ->', req.path)
-    const token = req.cookies.token
-    const refreshToken = req.cookies.refreshToken
-    
-    // if (token == null) return res.sendStatus(401)
-    
-    jwt.verify(token, screteKey, (err, user) => {
-      if (err) {
-        if (refreshToken) {
-          const refreshData = jwt.decode(refreshToken)
-          try {
-            jwt.verify(refreshToken, screteKey, (rerr, data) => {
-              const token = jwt.sign({ phone_number: data.phone_number, password: data.password }, screteKey, { expiresIn: '10s' })
-              const refreshToken = jwt.sign({ phone_number: data.phone_number, password: data.password }, screteKey, { expiresIn: '1h' })
-              res.cookie('token', token, { maxAge: 10000, httpOnly: true})
-              res.cookie('refreshToken', token)
-            })
-          } catch(tryerr) {
-            // const data = jwt.decode(refreshToken)
-              const token = jwt.sign({ phone_number: refreshData.phone_number, password: refreshData.password }, screteKey, { expiresIn: '10s' })
-              const refreshToken = jwt.sign({ phone_number: refreshData.phone_number, password: refreshData.password }, screteKey, { expiresIn: '1h' })
-              res.cookie('token', token, { maxAge: 10000, httpOnly: true})
-              res.cookie('refreshToken', token)
-              // return res.status(302).redirect(req.path)
+function auth(req, res, next) {
+  // console.log('headers ->', req.headers)
+  const authorization = req.headers['authorization']
+  if (!authorization) return res.sendStatus(403)
+  
+  const authAry = authorization.split(' ')
+  let token,refreshToken
+  if (authAry.includes('RefreshToken')) {
+    refreshToken = authAry.pop()
+  } else {
+    token = authAry.pop()
+  }
 
-          }
-        }
-        return res.sendStatus(403)
+  if (refreshToken) {
+    jwt.verify(refreshToken, screteKey, (err, user) => {
+      if (!err) {
+        const newToken = setToken({ phone_number: user.phone_number }, '5s')
+        res.header('Access-Control-Expose-Headers', '*')
+        res.header('x-new-token', newToken)
+        return next()
       }
-      console.log('user -> ', user)
-      next()
+      
+      res.sendStatus(403)
     })
+  }
+
+  if (token) {
+    jwt.verify(token, screteKey, (err, user) => {
+      // const refreshData = jwt.decode(refreshToken)
+      if (!err) return next()
+      res.sendStatus(401)
+    })
+  }
 }
 
-export { screteKey }
+function setToken(data, time = '5s', key = screteKey) {
+  return jwt.sign(data, key, { expiresIn: time })
+}
+
+export { setToken, auth }

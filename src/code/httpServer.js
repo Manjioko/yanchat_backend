@@ -11,9 +11,7 @@ import { find, insert, update, createTable, findColumnName, add } from '../dataB
 import fliterProperty from '../ulits/fliterPropertyByObject.js'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
-import auth from '../ulits/auth.js'
-import jwt from 'jsonwebtoken'
-import { screteKey } from '../ulits/auth.js'
+import { setToken, auth } from '../ulits/auth.js'
 
 
 const __dirname = path.resolve()
@@ -178,10 +176,8 @@ app.post('/register', async (req, res) => {
 
 // 登录
 app.post('/login', async (req, res) => {
-    // console.log('req body - ', req.body)
     const { password, phone_number } = req.body
     const list = await find('user_info', 'phone_number', phone_number)
-    // console.log('list ->', list[0])
     if (!list.length) return res.send('err')
     if (wsClients[list[0].user_id]) {
         console.log('repeat: ', list[0].user_id)
@@ -193,12 +189,17 @@ app.post('/login', async (req, res) => {
             password: null,
         }
 
-        // console.log('login -> ', data)
-        const token = jwt.sign({ phone_number, password }, screteKey, { expiresIn: '10s' })
-        const refreshToken = jwt.sign({ phone_number, password }, screteKey, { expiresIn: '1h' })
-        res.cookie('token', token, { maxAge: 10000, httpOnly: true})
-        res.cookie('refreshToken', token)
-        return res.send(data)
+        const token = setToken({ phone_number }, '5s')
+        const refreshToken = setToken({ phone_number }, '1h')
+        const result = {
+            user_data: data,
+            auth: {
+                token,
+                refreshToken
+            }
+        }
+        
+        return res.send(result)
     }
     // console.log('list', list)
     if (list.length && list[0].password !== password) return res.send('pw_err')
