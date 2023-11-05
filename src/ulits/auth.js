@@ -4,7 +4,7 @@ const screteKey = '74ec5a8b-c3a3-474b-96ea-21720a47ac68'
 function auth(req, res, next) {
   // console.log('headers ->', req.headers)
   const authorization = req.headers['authorization']
-  if (!authorization) return res.sendStatus(403)
+  if (!authorization || !authorization.includes('Bearer ')) return res.sendStatus(403)
   
   const authAry = authorization.split(' ')
   let token,refreshToken
@@ -17,7 +17,7 @@ function auth(req, res, next) {
   if (refreshToken) {
     jwt.verify(refreshToken, screteKey, (err, user) => {
       if (!err) {
-        const newToken = setToken({ phone_number: user.phone_number }, '5s')
+        const newToken = setToken({ phone_number: user.phone_number }, '600s')
         res.header('Access-Control-Expose-Headers', '*')
         res.header('x-new-token', newToken)
         return next()
@@ -34,6 +34,8 @@ function auth(req, res, next) {
       res.sendStatus(401)
     })
   }
+
+  if (!token && !refreshToken) res.sendStatus(403)
 }
 
 function setToken(data, time = '5s', key = screteKey) {

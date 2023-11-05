@@ -49,7 +49,7 @@ app.get('/', (req, res) => {
 })
 
 // 获取好友列表
-app.post('/getFriends', async (req, res) => {
+app.post('/getFriends', auth, async (req, res) => {
     const { user_id, get_user_info } = req.body
 
     if (!user_id) {
@@ -64,7 +64,7 @@ app.post('/getFriends', async (req, res) => {
     res.send('err')
 })
 // 上传文件
-app.post('/uploadFile',(req, res) => {
+app.post('/uploadFile', auth, (req, res) => {
     // console.log(req.file.filename, ' 已经上传。')
     const storage = multer.diskStorage({
         // 用来配置文件上传的位置
@@ -96,7 +96,7 @@ app.post('/uploadFile',(req, res) => {
 })
 
 // 更换头像
-app.post('/uploadAvatar',(req, res) => {
+app.post('/uploadAvatar', auth, (req, res) => {
     // console.log('req res -> ', req.body)
     const storage = multer.diskStorage({
         // 用来配置文件上传的位置
@@ -139,7 +139,7 @@ app.post('/uploadAvatar',(req, res) => {
 })
 
 // 客户端获取文件
-app.post('/getFile', async (req, res) => {
+app.post('/getFile', auth, async (req, res) => {
     const { filename } = req.body
     if (!filename || typeof filename !== 'string') return res.send('res')
     res.sendFile(fp('../../public/' + filename))
@@ -174,6 +174,15 @@ app.post('/register', async (req, res) => {
     res.send('err')
 })
 
+app.post('/refreshToken', auth, async (req, res) => {
+    const { user_id, phone_number} = req.body
+    const list = await find('user_info', 'user_id', user_id)
+    if (!list.length) return res.send('err')
+    const refreshToken = setToken({ phone_number }, '72h')
+    return res.send({
+        refreshToken
+    })
+})
 // 登录
 app.post('/login', async (req, res) => {
     const { password, phone_number } = req.body
@@ -189,8 +198,8 @@ app.post('/login', async (req, res) => {
             password: null,
         }
 
-        const token = setToken({ phone_number }, '5s')
-        const refreshToken = setToken({ phone_number }, '1h')
+        const token = setToken({ phone_number }, '600s')
+        const refreshToken = setToken({ phone_number }, '72h')
         const result = {
             user_data: data,
             auth: {
@@ -207,7 +216,7 @@ app.post('/login', async (req, res) => {
 })
 
 // 添加好友
-app.post('/addFriend', async (req, res) => {
+app.post('/addFriend', auth, async (req, res) => {
     const { phone_number, friend_phone_number } = req.body
     // 检查参数
     if (!phone_number || !friend_phone_number) {
@@ -307,7 +316,7 @@ app.post('/chatData', auth, async (req, res) => {
 })
 
 // 读未读信息
-app.post('/unread', async (req, res) => {
+app.post('/unread', auth, async (req, res) => {
     const { friends, user_id } = req.body
     // console.log('friends -> ', friends)
     if (!friends || !Array.isArray(friends)) return res.send('err')
@@ -364,7 +373,7 @@ app.post('/unread', async (req, res) => {
 })
 
 // 修改昵称
-app.post('/changeNickName', async(req, res) => {
+app.post('/changeNickName', auth, async(req, res) => {
     const {phone_number, nick_name} = req.body
     console.log('phone_number -> ', phone_number, nick_name)
     if (!phone_number) return res.send('err')
@@ -407,7 +416,7 @@ app.post('/changeNickName', async(req, res) => {
 })
 
 // 用户 Markdown 使用权限
-app.post('/isUseMd', async(req, res) => {
+app.post('/isUseMd', auth, async(req, res) => {
     const { is_use_md, user_id } = req.body
     // console.log('req -> ', is_use_md, user_id)
     if (!user_id) return res.send('err')
@@ -420,7 +429,7 @@ app.post('/isUseMd', async(req, res) => {
 })
 
 // 删除聊天记录
-app.post('/deleteChat', async(req, res) => {
+app.post('/deleteChat', auth, async(req, res) => {
     const { chat, del_flag } = req.body
     // if (typeof chat === 'string') chat = JSON.parse(chat)
     const { to_table, chat_id, to_id } = chat
@@ -477,7 +486,7 @@ app.post('/deleteChat', async(req, res) => {
 })
 
 // 更新聊天记录
-app.post('/updateChat', async(req, res) => {
+app.post('/updateChat', auth, async(req, res) => {
     const { chat } = req.body
     const { to_table, chat_id } = chat
     if (!to_table || !chat_id) return res.send('err')
