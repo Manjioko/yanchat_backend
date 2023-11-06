@@ -10,6 +10,9 @@ import imgHandler from '../ulits/imgHandler.js'
 import { find, insert, update, createTable, findColumnName, add } from '../dataBase/operator_data_base.js'
 import fliterProperty from '../ulits/fliterPropertyByObject.js'
 import cors from 'cors'
+import cookieParser from 'cookie-parser'
+import { setToken, auth } from '../ulits/auth.js'
+
 
 const __dirname = path.resolve()
 const app = express()
@@ -17,6 +20,7 @@ const server = http.createServer(app)
 globalThis.$httpServer = server
 // 处理 post 请求
 app.use(cors())
+app.use(cookieParser())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
@@ -42,10 +46,10 @@ app.use('/avatar', express.static(path.join(fp('../../avatar/'))))
 // 返回主页面，主页面需要挂载在此处
 app.get('/', (req, res) => {
     res.sendFile(fp('../../public/index.html'))
-});
+})
 
 // 获取好友列表
-app.post('/getFriends', async (req, res) => {
+app.post('/getFriends', auth, async (req, res) => {
     const { user_id, get_user_info } = req.body
 
     if (!user_id) {
@@ -60,7 +64,7 @@ app.post('/getFriends', async (req, res) => {
     res.send('err')
 })
 // 上传文件
-app.post('/uploadFile',(req, res) => {
+app.post('/uploadFile', auth, (req, res) => {
     // console.log(req.file.filename, ' 已经上传。')
     const storage = multer.diskStorage({
         // 用来配置文件上传的位置
@@ -92,7 +96,7 @@ app.post('/uploadFile',(req, res) => {
 })
 
 // 更换头像
-app.post('/uploadAvatar',(req, res) => {
+app.post('/uploadAvatar', auth, (req, res) => {
     // console.log('req res -> ', req.body)
     const storage = multer.diskStorage({
         // 用来配置文件上传的位置
@@ -135,7 +139,7 @@ app.post('/uploadAvatar',(req, res) => {
 })
 
 // 客户端获取文件
-app.post('/getFile', async (req, res) => {
+app.post('/getFile', auth, async (req, res) => {
     const { filename } = req.body
     if (!filename || typeof filename !== 'string') return res.send('res')
     res.sendFile(fp('../../public/' + filename))
@@ -170,12 +174,19 @@ app.post('/register', async (req, res) => {
     res.send('err')
 })
 
+app.post('/refreshToken', auth, async (req, res) => {
+    const { user_id, phone_number} = req.body
+    const list = await find('user_info', 'user_id', user_id)
+    if (!list.length) return res.send('err')
+    const refreshToken = setToken({ phone_number }, '72h')
+    return res.send({
+        refreshToken
+    })
+})
 // 登录
 app.post('/login', async (req, res) => {
-    // console.log('req body - ', req.body)
     const { password, phone_number } = req.body
     const list = await find('user_info', 'phone_number', phone_number)
-    // console.log('list ->', list[0])
     if (!list.length) return res.send('err')
     if (wsClients[list[0].user_id]) {
         console.log('repeat: ', list[0].user_id)
@@ -187,8 +198,17 @@ app.post('/login', async (req, res) => {
             password: null,
         }
 
-        // console.log('login -> ', data)
-        return res.send(data)
+        const token = setToken({ phone_number }, '600s')
+        const refreshToken = setToken({ phone_number }, '72h')
+        const result = {
+            user_data: data,
+            auth: {
+                token,
+                refreshToken
+            }
+        }
+        
+        return res.send(result)
     }
     // console.log('list', list)
     if (list.length && list[0].password !== password) return res.send('pw_err')
@@ -196,7 +216,7 @@ app.post('/login', async (req, res) => {
 })
 
 // 添加好友
-app.post('/addFriend', async (req, res) => {
+app.post('/addFriend', auth, async (req, res) => {
     const { phone_number, friend_phone_number } = req.body
     // 检查参数
     if (!phone_number || !friend_phone_number) {
@@ -255,7 +275,7 @@ app.post('/addFriend', async (req, res) => {
 })
 
 // 读取聊天记录
-app.post('/chatData', async (req, res) => {
+app.post('/chatData', auth, async (req, res) => {
     const { chat_table, offset, limit, user_id } = req.body
     // console.log('cahtdata -> ', chat_table, offset)
     if (!chat_table || !user_id) return res.send({})
@@ -286,17 +306,17 @@ app.post('/chatData', async (req, res) => {
         return res.send({})
     }
     // console.log('data -> ', data)
-    if (!data) return res.send({})
+    if (!data) return res.send({offset: 0, chat: []})
     const resData = data.reverse()
     const resOb = {
         offset: resData[0]?.id || 0,
-        data: resData,
+        data: resData || [],
     }
     return res.send(resOb)
 })
 
 // 读未读信息
-app.post('/unread', async (req, res) => {
+app.post('/unread', auth, async (req, res) => {
     const { friends, user_id } = req.body
     // console.log('friends -> ', friends)
     if (!friends || !Array.isArray(friends)) return res.send('err')
@@ -353,7 +373,7 @@ app.post('/unread', async (req, res) => {
 })
 
 // 修改昵称
-app.post('/changeNickName', async(req, res) => {
+app.post('/changeNickName', auth, async(req, res) => {
     const {phone_number, nick_name} = req.body
     console.log('phone_number -> ', phone_number, nick_name)
     if (!phone_number) return res.send('err')
@@ -396,7 +416,7 @@ app.post('/changeNickName', async(req, res) => {
 })
 
 // 用户 Markdown 使用权限
-app.post('/isUseMd', async(req, res) => {
+app.post('/isUseMd', auth, async(req, res) => {
     const { is_use_md, user_id } = req.body
     // console.log('req -> ', is_use_md, user_id)
     if (!user_id) return res.send('err')
@@ -409,7 +429,7 @@ app.post('/isUseMd', async(req, res) => {
 })
 
 // 删除聊天记录
-app.post('/deleteChat', async(req, res) => {
+app.post('/deleteChat', auth, async(req, res) => {
     const { chat, del_flag } = req.body
     // if (typeof chat === 'string') chat = JSON.parse(chat)
     const { to_table, chat_id, to_id } = chat
@@ -466,7 +486,7 @@ app.post('/deleteChat', async(req, res) => {
 })
 
 // 更新聊天记录
-app.post('/updateChat', async(req, res) => {
+app.post('/updateChat', auth, async(req, res) => {
     const { chat } = req.body
     const { to_table, chat_id } = chat
     if (!to_table || !chat_id) return res.send('err')
