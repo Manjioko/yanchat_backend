@@ -10,7 +10,7 @@ import imgHandler from '../ulits/imgHandler.js'
 import { find, insert, update, createTable, findColumnName, add } from '../dataBase/operator_data_base.js'
 import fliterProperty from '../ulits/fliterPropertyByObject.js'
 import cors from 'cors'
-import cookieParser from 'cookie-parser'
+// import cookieParser from 'cookie-parser'
 import { setToken, auth } from '../ulits/auth.js'
 
 
@@ -20,7 +20,7 @@ const server = http.createServer(app)
 globalThis.$httpServer = server
 // 处理 post 请求
 app.use(cors())
-app.use(cookieParser())
+// app.use(cookieParser())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
@@ -174,6 +174,7 @@ app.post('/register', async (req, res) => {
     res.send('err')
 })
 
+// 更新 refreshToken
 app.post('/refreshToken', auth, async (req, res) => {
     const { user_id, phone_number} = req.body
     const list = await find('user_info', 'user_id', user_id)
@@ -183,6 +184,7 @@ app.post('/refreshToken', auth, async (req, res) => {
         refreshToken
     })
 })
+
 // 登录
 app.post('/login', async (req, res) => {
     const { password, phone_number } = req.body
@@ -500,6 +502,24 @@ app.post('/updateChat', auth, async(req, res) => {
         res.send('err')
     })
     res.send('ok')
+})
+
+// 引用功能接口
+app.post('/quote', auth, async(req, res) => {
+    const { chat } = req.body
+    const { to_table, chat_id } = chat
+    if (!to_table || !chat_id) return res.send('err')
+    knex(to_table)
+    .where('chat','like', `%${chat_id}%`)
+    .update({chat: JSON.stringify(chat)})
+    .then(async () => {
+        chat.receivedType = 'quote'
+        wsClients[chat.to_id]?.send(JSON.stringify(chat))
+    }).catch((err) => {
+        res.send('err')
+    })
+
+    res.sendStatus(200)
 })
 
 // http

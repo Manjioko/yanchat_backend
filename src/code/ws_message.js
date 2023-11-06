@@ -1,5 +1,3 @@
-import { append } from './save_to_file.js'
-
 import { insert, find, update, hasTable, createTable } from '../dataBase/operator_data_base.js'
 
 function err(ws, id, err) {
