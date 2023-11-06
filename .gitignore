@@ -3,7 +3,7 @@ node_modules
 /dist
 /public
 /avatar
-dev.sqlite
+*.sqlite
 
 
 # local env files
