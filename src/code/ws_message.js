@@ -17,6 +17,13 @@ async function message(ws, params, data) {
     // console.log('data -> ', data.toString('utf-8'))
     const chat = JSON.parse(data.toString('utf-8'))
     
+    if (chat.pingpong === 'pong') {
+        console.log('响应包 -> ', chat)
+        chat.receivedType = 'pong'
+        wsClients[chat.to_id]?.send(JSON.stringify(chat))
+        return
+    }
+    
     // 如果对方在线则需要把消息实时传递到对方的账号
     if (wsClients[chat.to_id]) {
         // 插入数据
