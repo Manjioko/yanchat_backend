@@ -26,7 +26,7 @@ async function message(ws, params, data) {
             unread: false,
         }
         insert(chat.to_table, insertData)
-        // console.log('发送一些消息 -> ', ws)
+        // console.log('发送一些消息 -> ', chat.to_table)
         wsClients[chat.to_id].send(data.toString('utf-8'))
         return
     }

@@ -506,7 +506,7 @@ app.post('/updateChat', auth, async(req, res) => {
 
 // 引用功能接口
 app.post('/quote', auth, async(req, res) => {
-    const { chat } = req.body
+    const { chat, user_id, to_id } = req.body
     const { to_table, chat_id } = chat
     if (!to_table || !chat_id) return res.send('err')
     knex(to_table)
@@ -514,7 +514,7 @@ app.post('/quote', auth, async(req, res) => {
     .update({chat: JSON.stringify(chat)})
     .then(async () => {
         chat.receivedType = 'quote'
-        wsClients[chat.to_id]?.send(JSON.stringify(chat))
+        wsClients[to_id]?.send(JSON.stringify(chat))
     }).catch((err) => {
         res.send('err')
     })
