@@ -24,7 +24,7 @@ app.use(cors())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
-app.use('/', express.static(path.join(fp('../../public/'))))
+app.use('/', express.static(path.join(fp('../../dist/'))))
 app.use('/avatar', express.static(path.join(fp('../../avatar/'))))
 
 //设置允许跨域访问该服务.
@@ -45,7 +45,7 @@ app.use('/avatar', express.static(path.join(fp('../../avatar/'))))
 
 // 返回主页面，主页面需要挂载在此处
 app.get('/', (req, res) => {
-    res.sendFile(fp('../../public/index.html'))
+    res.sendFile(fp('../../dist/index.html'))
 })
 
 // 获取好友列表
