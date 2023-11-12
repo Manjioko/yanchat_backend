@@ -192,7 +192,7 @@ app.post('/login', async (req, res) => {
     if (!list.length) return res.send('err')
     if (wsClients[list[0].user_id]) {
         console.log('repeat: ', list[0].user_id)
-        return res.send('repeat')
+        return res.send({ user_data: 'repeat', auth: null })
     }
     if (list.length && list[0].password === password) {
         const data = {
@@ -213,8 +213,13 @@ app.post('/login', async (req, res) => {
         return res.send(result)
     }
     // console.log('list', list)
-    if (list.length && list[0].password !== password) return res.send('pw_err')
-    res.send('err')
+    if (list.length && list[0].password !== password) {
+        return res.send({ user_data: 'pw_err', auth: null})
+    }
+    res.send({
+        user_data: 'err',
+        auth: null
+    })
 })
 
 // 添加好友

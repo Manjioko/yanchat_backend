@@ -43,6 +43,14 @@ async function message(ws, params, data) {
         chat: data.toString('utf-8'),
         unread: true,
     }
+
+    //  客户不在线的情况下,也应该响应发送方的信息
+    const pongData = {
+        table_id: chat.to_table,
+        chat_id: chat.chat_id,
+        receivedType: 'pong'
+    }
+    wsClients[chat.user_id]?.send(JSON.stringify(pongData))
     insert(chat.to_table, insertData)
 }
 
