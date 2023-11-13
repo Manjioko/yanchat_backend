@@ -11,7 +11,7 @@ import { find, insert, update, createTable, findColumnName, add } from '../dataB
 import fliterProperty from '../ulits/fliterPropertyByObject.js'
 import cors from 'cors'
 // import cookieParser from 'cookie-parser'
-import { setToken, auth } from '../ulits/auth.js'
+import { setToken, auth, sourceAuth } from '../ulits/auth.js'
 
 
 const __dirname = path.resolve()
@@ -26,6 +26,7 @@ app.use(bodyParser.json())
 
 app.use('/', express.static(path.join(fp('../../dist/'))))
 app.use('/avatar', express.static(path.join(fp('../../avatar/'))))
+app.use('/source', sourceAuth, express.static(path.join(fp('../../public/'))))
 
 //设置允许跨域访问该服务.
 // app.all('*', function (req, res, next) {

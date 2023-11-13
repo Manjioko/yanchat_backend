@@ -41,6 +41,7 @@ function auth(req, res, next) {
 function setToken(data, time = '5s', key = screteKey) {
   return jwt.sign(data, key, { expiresIn: time })
 }
+
 function verify(token, key = screteKey) {
   return new Promise((resolve, reject) => {
     jwt.verify(token, key, (err, user) => {
@@ -54,4 +55,9 @@ function verify(token, key = screteKey) {
   })
 }
 
-export { setToken, auth, verify }
+function sourceAuth(req, res, next) {
+  // console.log('req -> ')
+  next()
+}
+
+export { setToken, auth, verify, sourceAuth }
