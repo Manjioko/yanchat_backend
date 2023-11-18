@@ -46,7 +46,6 @@ function verify(token, key = screteKey) {
   return new Promise((resolve, reject) => {
     jwt.verify(token, key, (err, user) => {
       if (!err) {
-        // console.log('验证成功!!!')
         resolve(user)
       } else {
         reject(err)
@@ -56,8 +55,10 @@ function verify(token, key = screteKey) {
 }
 
 function sourceAuth(req, res, next) {
-  // console.log('req -> ')
-  next()
+  const token = req.query.token
+  verify(token)
+  .then(() => next())
+  .catch(() => res.sendStatus(401))
 }
 
 export { setToken, auth, verify, sourceAuth }
