@@ -26,7 +26,7 @@ app.use(bodyParser.json())
 
 app.use('/', express.static(path.join(fp('../../dist/'))))
 app.use('/avatar', express.static(path.join(fp('../../avatar/'))))
-app.use('/source', sourceAuth, express.static(path.join(fp('../../public/'))))
+app.use('/source', auth, express.static(path.join(fp('../../public/'))))
 
 //设置允许跨域访问该服务.
 // app.all('*', function (req, res, next) {
@@ -525,6 +525,11 @@ app.post('/quote', auth, async(req, res) => {
         res.send('err')
     })
 
+    res.sendStatus(200)
+})
+
+// 引用功能接口
+app.get('/verifyAuth', auth, async(req, res) => {
     res.sendStatus(200)
 })
 

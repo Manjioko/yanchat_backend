@@ -3,9 +3,8 @@ import jwt from 'jsonwebtoken'
 const screteKey = '74ec5a8b-c3a3-474b-96ea-21720a47ac68'
 function auth(req, res, next) {
   // console.log('headers ->', req.headers)
-  const authorization = req.headers['authorization']
+  const authorization = req.headers['authorization'] || (req.query.token ? `Bearer ${req.query.token}` : null)
   if (!authorization || !authorization.includes('Bearer ')) return res.sendStatus(403)
-  
   const authAry = authorization.split(' ')
   let token,refreshToken
   if (authAry.includes('RefreshToken')) {
