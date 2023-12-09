@@ -98,6 +98,11 @@ app.post('/uploadFile', auth, (req, res) => {
 
 // 更换头像
 app.post('/uploadAvatar', auth, (req, res) => {
+    // 使用 fs.existsSync 检查文件夹是否存在
+    if (!fs.existsSync(fp('../../avatar/'))) {
+        // 如果不存在，使用 fs.mkdirSync 创建文件夹
+        fs.mkdirSync(fp('../../avatar/'))
+    }
     // console.log('req res -> ', req.body)
     const storage = multer.diskStorage({
         // 用来配置文件上传的位置
