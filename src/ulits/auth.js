@@ -61,7 +61,7 @@ function sourceAuth(req, res, next) {
 }
 
 function fontendAuth(req, res, next) {
-  if (req.path === '/') {
+  if (req.path === '/login') {
     res.header('Access-Control-Expose-Headers', '*')
     const domain = process.env.DOMAIN
     const ws = process.env.WS
