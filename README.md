@@ -9,3 +9,8 @@ npm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp"
 npm config set sharp_libvips_binary_host "https://npmmirror.com/mirrors/sharp-libvips"
 npm install sharp
 ```
+
+### docker 启动参数如下,其中 DOMAIN WS 是必须要设置的
+```bash
+docker run -d -e DOMAIN="http://your-domain" -e WS="ws://your-domain" --name=yanchat -p your-port:your-port yanchat
+```

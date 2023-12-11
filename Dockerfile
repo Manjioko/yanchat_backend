@@ -21,5 +21,8 @@ RUN npm install --omit=dev
 # 暴露应用程序的端口
 EXPOSE 9999
 
-# 启动应用程序
-CMD ["pm2", "start", "index.js", "-i", "1","--no-daemon", "--name", "yanchat"]
+# 启动应用程序 这样会占用终端
+# CMD ["pm2", "start", "index.js", "-i", "1","--no-daemon", "--name", "yanchat"]
+
+# 启动应用程序 这样不会占用终端
+CMD ["pm2-runtime", "start", "index.js", "-i", "1", "--name", "yanchat"]
