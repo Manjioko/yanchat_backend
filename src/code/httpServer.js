@@ -158,11 +158,12 @@ app.post('/getFile', auth, async (req, res) => {
 
 // 注册
 app.post('/register', async (req, res) => {
-    // console.log('req body - ', req.body)
     const findResult = await find('user_info', 'phone_number', req.body.phone_number)
-    // console.log('find -- ', findResult)
     if (findResult.length) {
-        return res.send('exist')
+        return res.send({
+            user_data: 'exist',
+            auth: null
+        })
     }
     const user_id = uuidv4()
     const data = {
@@ -175,14 +176,25 @@ app.post('/register', async (req, res) => {
         avatar_url: null,
     }
     const insertResult = insert('user_info', data)
+    const token = setToken({ phone_number: req.body.phone_number }, '600s')
+    const refreshToken = setToken({ phone_number: req.body.phone_number }, '72h')
     // 设置默认头像
     const readStream = fs.createReadStream(fp(`../../avatar/avatar_default.png`))
     const writeStream = fs.createWriteStream(fp(`../../avatar/avatar_${user_id}.jpg`))
     readStream.pipe(writeStream)
     if (insertResult) {
-        return res.send(data)
+        return res.send({
+            user_data: data,
+            auth: {
+                token,
+                refreshToken
+            }
+        })
     }
-    res.send('err')
+    res.send({
+        user_data: 'err',
+        auth: null
+    })
 })
 
 // 更新 refreshToken
