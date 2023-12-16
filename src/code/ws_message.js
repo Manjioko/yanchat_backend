@@ -23,6 +23,12 @@ async function message(ws, params, data) {
         wsClients[chat.to_id]?.send(JSON.stringify(chat))
         return
     }
+
+    if (chat.event === 'videoCallStart') {
+        chat.receivedType = 'videoCallStart'
+        wsClients[chat.to_id]?.send(JSON.stringify(chat))
+        return
+    }
     
     // 如果对方在线则需要把消息实时传递到对方的账号
     if (wsClients[chat.to_id]) {
