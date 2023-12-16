@@ -11,7 +11,7 @@ import { find, insert, update, createTable, findColumnName, add } from '../dataB
 import fliterProperty from '../ulits/fliterPropertyByObject.js'
 import cors from 'cors'
 // import cookieParser from 'cookie-parser'
-import { setToken, auth, sourceAuth } from '../ulits/auth.js'
+import { setToken, auth, sourceAuth, fontendAuth } from '../ulits/auth.js'
 
 
 const __dirname = path.resolve()
@@ -24,7 +24,7 @@ app.use(cors())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
-app.use('/', express.static(path.join(fp('../../dist/'))))
+app.use('/', fontendAuth, express.static(path.join(fp('../../fontend/'))))
 app.use('/avatar', express.static(path.join(fp('../../avatar/'))))
 app.use('/source', auth, express.static(path.join(fp('../../public/'))))
 
@@ -46,7 +46,12 @@ app.use('/source', auth, express.static(path.join(fp('../../public/'))))
 
 // 返回主页面，主页面需要挂载在此处
 app.get('/', (req, res) => {
-    res.sendFile(fp('../../dist/index.html'))
+    // res.header('Access-Control-Expose-Headers', '*')
+    // res.header('x-new-domain', '192.168.106.110:9999')
+    // res.cookie('domain', '192.168.106.110')
+    // res.cookie('port', '9999')
+    // res.sendFile(fp('../../fontend/index.html'))
+    // res.send('ok')
 })
 
 // 获取好友列表
@@ -153,11 +158,12 @@ app.post('/getFile', auth, async (req, res) => {
 
 // 注册
 app.post('/register', async (req, res) => {
-    // console.log('req body - ', req.body)
     const findResult = await find('user_info', 'phone_number', req.body.phone_number)
-    // console.log('find -- ', findResult)
     if (findResult.length) {
-        return res.send('exist')
+        return res.send({
+            user_data: 'exist',
+            auth: null
+        })
     }
     const user_id = uuidv4()
     const data = {
@@ -170,14 +176,25 @@ app.post('/register', async (req, res) => {
         avatar_url: null,
     }
     const insertResult = insert('user_info', data)
+    const token = setToken({ phone_number: req.body.phone_number }, '600s')
+    const refreshToken = setToken({ phone_number: req.body.phone_number }, '72h')
     // 设置默认头像
     const readStream = fs.createReadStream(fp(`../../avatar/avatar_default.png`))
     const writeStream = fs.createWriteStream(fp(`../../avatar/avatar_${user_id}.jpg`))
     readStream.pipe(writeStream)
     if (insertResult) {
-        return res.send(data)
+        return res.send({
+            user_data: data,
+            auth: {
+                token,
+                refreshToken
+            }
+        })
     }
-    res.send('err')
+    res.send({
+        user_data: 'err',
+        auth: null
+    })
 })
 
 // 更新 refreshToken
@@ -195,7 +212,10 @@ app.post('/refreshToken', auth, async (req, res) => {
 app.post('/login', async (req, res) => {
     const { password, phone_number } = req.body
     const list = await find('user_info', 'phone_number', phone_number)
-    if (!list.length) return res.send('err')
+    if (!list.length) return res.send({
+        user_data: 'err',
+        auth: null
+    })
     if (wsClients[list[0].user_id]) {
         console.log('repeat: ', list[0].user_id)
         return res.send({ user_data: 'repeat', auth: null })

@@ -60,4 +60,18 @@ function sourceAuth(req, res, next) {
   .catch(() => res.sendStatus(401))
 }
 
-export { setToken, auth, verify, sourceAuth }
+function fontendAuth(req, res, next) {
+  if (req.path === '/login') {
+    res.header('Access-Control-Expose-Headers', '*')
+    const domain = process.env.DOMAIN
+    const ws = process.env.WS
+    // console.log('path -> ', req.path)
+    if (domain && ws) {
+      res.header('x-new-domain', domain)
+      res.header('x-new-ws', ws)
+    }
+  }
+  next()
+}
+
+export { setToken, auth, verify, sourceAuth , fontendAuth}

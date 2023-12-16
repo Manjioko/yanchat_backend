@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import './src/dataBase/knexfile.js'
 import './src/code/httpServer.js'
 import ws from './src/code/ws.js'
