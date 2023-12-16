@@ -10,8 +10,10 @@
   "author": "",
   "license": "ISC",
   "type": "module",
-  "nodemonConfig":{
-    "watch":["src/"]
+  "nodemonConfig": {
+    "watch": [
+      "src/"
+    ]
   },
   "dependencies": {
     "await-to-js": "^3.0.0",
