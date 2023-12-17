@@ -2,6 +2,7 @@ import express from 'express'
 import path, { basename } from 'path'
 import fs from 'fs'
 import http from 'http'
+// import https from 'https'
 import bodyParser from 'body-parser'
 import multer from 'multer'
 import { v4 as uuidv4 } from 'uuid'
@@ -13,10 +14,17 @@ import cors from 'cors'
 // import cookieParser from 'cookie-parser'
 import { setToken, auth, sourceAuth, fontendAuth } from '../ulits/auth.js'
 
-
 const __dirname = path.resolve()
+// https 在没有 nginx 的测试环境上使用
+//https证书
+// const options = {
+//     cert: fs.readFileSync(path.join(__dirname, './cert.pem')),
+//     key: fs.readFileSync(path.join(__dirname, './cert-key.pem')),
+// }
+
 const app = express()
 const server = http.createServer(app)
+// const server = https.createServer(options,app)
 globalThis.$httpServer = server
 // 处理 post 请求
 app.use(cors())
