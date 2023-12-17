@@ -24,12 +24,24 @@ async function message(ws, params, data) {
         return
     }
 
-    if (chat.event === 'videoCallStart') {
-        chat.receivedType = 'videoCallStart'
+    if (chat.event === 'videoCallAnwser') {
+        chat.receivedType = 'videoCallAnwser'
         wsClients[chat.to_id]?.send(JSON.stringify(chat))
         return
     }
-    
+
+    if (chat.event === 'videoCallOffer') {
+        chat.receivedType = 'videoCallOffer'
+        wsClients[chat.to_id]?.send(JSON.stringify(chat))
+        return
+    }
+
+    if (chat.event === 'videoCallLeave') {
+        chat.receivedType = 'videoCallLeave'
+        wsClients[chat.to_id]?.send(JSON.stringify(chat))
+        return
+    }
+
     // 如果对方在线则需要把消息实时传递到对方的账号
     if (wsClients[chat.to_id]) {
         // 插入数据
