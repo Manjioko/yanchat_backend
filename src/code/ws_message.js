@@ -18,26 +18,14 @@ async function message(ws, params, data) {
     const chat = JSON.parse(data.toString('utf-8'))
     
     if (chat.pingpong === 'pong') {
-        console.log('响应包 -> ', chat)
+        // console.log('响应包 -> ', chat)
         chat.receivedType = 'pong'
         wsClients[chat.to_id]?.send(JSON.stringify(chat))
         return
     }
 
-    if (chat.event === 'videoCallAnwser') {
-        chat.receivedType = 'videoCallAnwser'
-        wsClients[chat.to_id]?.send(JSON.stringify(chat))
-        return
-    }
-
-    if (chat.event === 'videoCallOffer') {
-        chat.receivedType = 'videoCallOffer'
-        wsClients[chat.to_id]?.send(JSON.stringify(chat))
-        return
-    }
-
-    if (chat.event === 'videoCallLeave') {
-        chat.receivedType = 'videoCallLeave'
+    if (chat.event && chat.event.startsWith('videoCall')) {
+        chat.receivedType = chat.event
         wsClients[chat.to_id]?.send(JSON.stringify(chat))
         return
     }
