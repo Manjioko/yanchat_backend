@@ -5,6 +5,7 @@ node_modules
 /avatar
 /fontend
 *.sqlite
+.pem
 
 
 # local env files
