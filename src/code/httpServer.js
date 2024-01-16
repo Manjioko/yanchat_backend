@@ -157,6 +157,97 @@ app.post('/uploadAvatar', auth, (req, res) => {
 
 })
 
+// 文件分段上传服务
+app.post('/uploadSliceFile', async (req, res) => {
+    const { uid, index } = req.query
+    console.log('请求序号 -> ', index)
+    // console.log('params -> ', req.params, req.body, req.query)
+    if (!fs.existsSync(fp('../../sliceFile/' + uid))) {
+        fs.mkdirSync(fp('../../sliceFile/' + uid))
+        console.log(`文件夹 ${uid} 创建成功!`)
+    }
+
+    const storage = multer.diskStorage({
+        // 用来配置文件上传的位置
+        destination: (req, file, cb) => {
+            cb(null, fp('../../sliceFile/' + uid))
+        },
+    
+        // 用来配置上传文件的名称（包含后缀）
+        filename: (req, file, cb) => {
+            let basename = `${index}_data`
+            // 拼凑文件名
+            cb(null, basename)
+        }
+    })
+    const upload = multer({ storage }).single('file')
+    upload(req, res, (err) => {
+        if (err) {
+            // console.log('false err -> ', err)
+            return res.sendStatus(500)
+        }
+        console.log(index, ' 已经上传。')
+        res.sendStatus(200)
+    })
+})
+
+// 文件全部上传完成后,通知在此拼接
+app.post('/joinFile', async (req, res) => {
+    const { fileName, uid } = req.body
+    try {
+        // 读取目录中的所有文件
+        const files = fs.readdirSync(fp('../../sliceFile/' + uid))
+
+        // console.log('matchingFiles -> ', matchingFiles)
+                       
+        const uploadFolderPath = fp('../../sliceFile/' + uid)
+        const outputFile = fp('../../public/' + fileName)
+        console.log('uploadFolderPath -> ', uploadFolderPath)
+
+        // 获取上传文件夹中的所有分段文件
+        const chunkFiles = fs.readdirSync(uploadFolderPath)
+
+        console.log('chunkFIles -> ', chunkFiles)
+
+        // 创建一个可写流，用于拼接分段文件
+        const outputStream = fs.createWriteStream(outputFile)
+
+        const pipeData = function(chunkFile) {
+            return new Promise((resolve, reject) => {
+              const chunkFilePath = path.join(uploadFolderPath, chunkFile)
+              const readStream = fs.createReadStream(chunkFilePath)
+              readStream.pipe(outputStream, { end: false })
+              readStream.on('error', (err) => {
+                reject(err)
+              })
+              readStream.on('end', () => {
+                resolve('OK')
+              })
+            })
+          }
+          for (const chunkFile of chunkFiles) {
+            try {
+              await pipeData(chunkFile)
+            } catch (error) {
+              console.log(error)
+            }
+          }
+    
+          outputStream.end()
+          fs.rm(uploadFolderPath, { recursive: true }, (err) => {
+              if (err) {
+                  console.error(err)
+              } else {
+                  console.log('文件夹删除成功')
+              }
+          })
+
+    } catch (error) {
+        console.error('Error reading directory:', error)
+    }
+    res.send(fileName)
+})
+
 // 客户端获取文件
 app.post('/getFile', auth, async (req, res) => {
     const { filename } = req.body
