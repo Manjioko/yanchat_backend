@@ -34,7 +34,8 @@ app.use(bodyParser.json())
 
 app.use('/', fontendAuth, express.static(path.join(fp('../../fontend/'))))
 app.use('/avatar', express.static(path.join(fp('../../avatar/'))))
-app.use('/source', auth, express.static(path.join(fp('../../public/'))))
+// app.use('/source', auth, express.static(path.join(fp('../../public/'))))
+app.use('/source', express.static(path.join(fp('../../public/'))))
 
 //设置允许跨域访问该服务.
 // app.all('*', function (req, res, next) {
@@ -246,6 +247,24 @@ app.post('/joinFile', async (req, res) => {
         console.error('Error reading directory:', error)
     }
     res.send(fileName)
+})
+
+// 清空文件夹
+app.post('/clearDir', (req, res) => {
+    console.log('clearDir')
+    const { dirName } = req.body
+    const dir = fp('../../sliceFile/' + dirName)
+    if (fs.existsSync(dir)) {
+        fs.readdirSync(dir).forEach((file, index) => {
+            const curPath = dir + '/' + file
+            fs.unlinkSync(curPath)
+        })
+
+        // 删除空文件夹
+        fs.rmdirSync(dir)
+        console.log(`Deleted folder: ${dir}`)
+        res.sendStatus(200)
+    }
 })
 
 // 客户端获取文件
