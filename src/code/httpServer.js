@@ -187,6 +187,9 @@ app.post('/uploadSliceFile', async (req, res) => {
             // console.log('false err -> ', err)
             return res.sendStatus(500)
         }
+        // if (index === '1') {
+        //     return res.sendStatus(500)
+        // }
         console.log(index, ' 已经上传。')
         res.sendStatus(200)
     })
@@ -195,6 +198,10 @@ app.post('/uploadSliceFile', async (req, res) => {
 // 文件全部上传完成后,通知在此拼接
 app.post('/joinFile', async (req, res) => {
     const { fileName, uid } = req.body
+    // 获取文件的后缀
+    const ext = path.extname(fileName)
+    const basename = path.basename(fileName, ext)
+    const responseName = basename + '-' + Date.now() + ext
     try {
         // 读取目录中的所有文件
         const files = fs.readdirSync(fp('../../sliceFile/' + uid))
@@ -202,15 +209,15 @@ app.post('/joinFile', async (req, res) => {
         // console.log('matchingFiles -> ', matchingFiles)
                        
         const uploadFolderPath = fp('../../sliceFile/' + uid)
-        const outputFile = fp('../../public/' + fileName)
-        console.log('uploadFolderPath -> ', uploadFolderPath)
+        const outputFile = fp('../../public/' + responseName)
+        // console.log('uploadFolderPath -> ', uploadFolderPath)
 
         // 获取上传文件夹中的所有分段文件
         const chunkFiles = fs.readdirSync(uploadFolderPath).sort((a, b) => {
             return Number(a.split('_')[0]) - Number(b.split('_')[0])
         })
 
-        console.log('chunkFIles -> ', chunkFiles)
+        // console.log('chunkFIles -> ', chunkFiles)
 
         // 创建一个可写流，用于拼接分段文件
         const outputStream = fs.createWriteStream(outputFile)
@@ -251,7 +258,7 @@ app.post('/joinFile', async (req, res) => {
     } catch (error) {
         console.error('Error reading directory:', error)
     }
-    res.send(fileName)
+    res.send(responseName)
 })
 
 // 清空文件夹
