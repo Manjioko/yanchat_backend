@@ -205,7 +205,9 @@ app.post('/joinFile', async (req, res) => {
         console.log('uploadFolderPath -> ', uploadFolderPath)
 
         // 获取上传文件夹中的所有分段文件
-        const chunkFiles = fs.readdirSync(uploadFolderPath)
+        const chunkFiles = fs.readdirSync(uploadFolderPath).sort((a, b) => {
+            return Number(a.split('_')[0]) - Number(b.split('_')[0])
+        })
 
         console.log('chunkFIles -> ', chunkFiles)
 
@@ -214,15 +216,18 @@ app.post('/joinFile', async (req, res) => {
 
         const pipeData = function(chunkFile) {
             return new Promise((resolve, reject) => {
-              const chunkFilePath = path.join(uploadFolderPath, chunkFile)
-              const readStream = fs.createReadStream(chunkFilePath)
-              readStream.pipe(outputStream, { end: false })
-              readStream.on('error', (err) => {
-                reject(err)
-              })
-              readStream.on('end', () => {
-                resolve('OK')
-              })
+                // 提示垃圾回收系统回收垃圾
+                {
+                    const chunkFilePath = path.join(uploadFolderPath, chunkFile)
+                    const readStream = fs.createReadStream(chunkFilePath)
+                    readStream.pipe(outputStream, { end: false })
+                    readStream.on('error', (err) => {
+                        reject(err)
+                    })
+                    readStream.on('end', () => {
+                        resolve('OK')
+                    })
+                }
             })
           }
           for (const chunkFile of chunkFiles) {
