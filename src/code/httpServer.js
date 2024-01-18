@@ -472,7 +472,8 @@ app.post('/chatData', auth, async (req, res) => {
     if (!data) return res.send({offset: 0, chat: []})
     const resData = data.reverse()
     const resOb = {
-        offset: resData[0]?.id || 0,
+        // 如果第一个 id 都不存在,证明没有数据了, 直接返回之前 offset 
+        offset: resData[0]?.id || offset,
         data: resData || [],
     }
     return res.send(resOb)
