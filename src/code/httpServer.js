@@ -7,7 +7,7 @@ import bodyParser from 'body-parser'
 import multer from 'multer'
 import { v4 as uuidv4 } from 'uuid'
 import { to } from 'await-to-js'
-import imgHandler from '../ulits/imgHandler.js'
+// import imgHandler from '../ulits/imgHandler.js'
 import { find, insert, update, createTable, findColumnName, add } from '../dataBase/operator_data_base.js'
 import fliterProperty from '../ulits/fliterPropertyByObject.js'
 import cors from 'cors'
@@ -149,7 +149,7 @@ app.post('/uploadAvatar', auth, (req, res) => {
         })
         const inputPath = fp(`../../avatar/${req.file.filename}`)
         const outputPath = fp(`../../avatar/avatar_${req.body.user_id}.jpg`)
-        const [imgErr, result] = await to(imgHandler(inputPath, outputPath))
+        // const [imgErr, result] = await to(imgHandler(inputPath, outputPath))
         if (imgErr) {
             return res.send('err')
         }
@@ -306,6 +306,7 @@ app.post('/register', async (req, res) => {
         avatar_url: null,
     }
     const insertResult = insert('user_info', data)
+    console.log('insertResult -> ', insertResult)
     const token = setToken({ phone_number: req.body.phone_number }, '600s')
     const refreshToken = setToken({ phone_number: req.body.phone_number }, '72h')
     // 设置默认头像
