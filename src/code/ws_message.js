@@ -52,13 +52,13 @@ async function message(ws, params, data) {
 
     insert(chat.to_table, insertData)
     .then(res => {
-        // console.log('插入数据库返回值 -> ', res)
+        console.log('插入数据库返回值 -> ', res)
         //  客户不在线的情况下,也应该响应发送方的信息
         const pongData = {
-            table_id: chat.to_table,
+            to_table: chat.to_table,
             chat_id: chat.chat_id,
             receivedType: 'pong',
-            dbId: res[0]
+            id: res[0]
         }
         wsClients[chat.user_id]?.send(JSON.stringify(pongData))
     })
