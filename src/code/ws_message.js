@@ -34,13 +34,17 @@ async function message(ws, params, data) {
     if (wsClients[chat.to_id]) {
         // 插入数据
         const insertData = {
-            user_id: chat.user_id || 'test',
+            user_id: chat.user_id || 'yanchat',
             chat: data.toString('utf-8'),
             unread: false,
         }
         insert(chat.to_table, insertData)
+        .then(res => {
+            chat.id = res[0]
+            // console.log('data.id ', chat)
+            wsClients[chat.to_id].send(JSON.stringify(chat))
+        })
         // console.log('发送一些消息 -> ', chat.to_table)
-        wsClients[chat.to_id].send(data.toString('utf-8'))
         return
     }
     // 插入数据 在数据库中写入未读标记
@@ -57,6 +61,7 @@ async function message(ws, params, data) {
         const pongData = {
             to_table: chat.to_table,
             chat_id: chat.chat_id,
+            to_id: chat.user_id,
             receivedType: 'pong',
             id: res[0]
         }

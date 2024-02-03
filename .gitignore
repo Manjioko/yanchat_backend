@@ -4,6 +4,7 @@ node_modules
 /public
 /avatar
 /fontend
+/sliceFile
 *.sqlite
 .pem
 

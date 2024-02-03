@@ -514,21 +514,22 @@ app.post('/unread', auth, async (req, res) => {
             )
             if (zerr || !zdata.length) continue
             let resData = zdata?.pop()
+            if (!resData) continue
             // 将最后一条的聊天记录的未读信息删除
             // 因为获取最后一条信息的场景不是因为未读
             // 而是为了提示用户的上次最后一次聊天内容
-            delete resData?.unread
+            delete resData.unread
             // resultOb[table_id] = [resData]
             resultOb[table_id] = {
                 unread: 0,
-                chat: JSON.parse(resData?.chat ?? {})
+                chat: [{...JSON.parse(resData.chat), id: resData.id}]
             }
             continue
         }
 
         resultOb[table_id] = {
             unread: fdata.length,
-            chat: JSON.parse(fdata[fdata.length - 1].chat)
+            chat: fdata.map(d => ({...JSON.parse(d.chat), id: d.id}))
         }
         await to(knex(table_id).where(function() {
             this.where('unread', true).whereNot('user_id', user_id)
