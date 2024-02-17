@@ -63,7 +63,7 @@ async function message(ws, params, data) {
             chat_id: chat.chat_id,
             to_id: chat.user_id,
             receivedType: 'pong',
-            id: res[0]
+            id: res?.[0] || null
         }
         wsClients[chat.user_id]?.send(JSON.stringify(pongData))
     })
