@@ -438,6 +438,51 @@ app.post('/addFriend', auth, async (req, res) => {
     res.send({friends: selfFriendList})
 })
 
+// 添加好友
+app.post('/addFriendTest', auth, async (req, res) => {
+    const { phone_number, friend_phone_number } = req.body
+    // 检查参数
+    if (!phone_number || !friend_phone_number) {
+        console.log('参数不正确。')
+        return res.send('err')
+    }
+
+    // 第一步，查是否存在好友
+    const selfUser = await find('user_info', 'phone_number', phone_number)
+    const selfFriendList = JSON.parse(selfUser[0]?.friends || '[]')
+    const fri = selfFriendList.find(f => f.phone_number === friend_phone_number)
+    if (fri) {
+        console.log('你们已经是好友，重复添加')
+        return res.send('exist')
+    }
+
+    // 第二步，不存在好友，查询该电话(用户)是否在数据库中存在
+    const otherUser = await find('user_info', 'phone_number', friend_phone_number)
+    const otherFriendList =  JSON.parse(otherUser[0]?.friends || '[]')
+    if(!otherUser || !otherUser.length) {
+        console.log('该用户不存在 ', friend_phone_number)
+        return  res.send('miss')
+    }
+
+    // 构建消息体
+    const friend_message = {
+        from_user_id: selfUser[0].user_id,
+        from_user_name: selfUser[0].user,
+        message_type: 'addFriend',
+        time: new Date().getTime(),
+        content: '添加好友'
+    }
+    // 发送信息到对方的 user_info 中
+    const isExist = JSON.parse(otherUser[0].messages || '[]').find(item => item.from_user_id === selfUser[0].user_id)
+    console.log('重复了 -> ', isExist)
+    if (isExist) return res.send('wait')
+    update('user_info', 'user_id', otherUser[0].user_id, {
+        messages: JSON.stringify([...JSON.parse(otherUser[0].messages || '[]'), friend_message])
+    })
+
+    return res.send('wait')
+})
+
 // 读取聊天记录
 app.post('/chatData', auth, async (req, res) => {
     const { chat_table, offset, limit, user_id } = req.body
