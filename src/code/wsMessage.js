@@ -92,7 +92,7 @@ function _handleTips(chat) {
         writeTips(to_id, {
             messages_id: tips_messages_id,
             messages_box: tipsBody,
-            messages_type: tipsType
+            messages_type: tips
         }).then(res => {
             if (res) {
                 // 消息系统不同于聊天信息发送接收, 消息系统有高确认性, 必须需要客户端确认
