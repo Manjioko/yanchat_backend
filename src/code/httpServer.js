@@ -305,7 +305,15 @@ app.post('/register', async (req, res) => {
         group: null,
         avatar_url: null,
     }
-    const insertResult = insert('user_info', data)
+    // 构建一个表,用于做消息通知
+    const chat_table = 'messages_' + user_id
+    createTable(chat_table, [
+        { data: 'messages_type', notNull: false, type: 'text' },
+        { data: 'messages_box', notNull: false, type: 'text' },
+        { data: 'messages_id', notNull: false, type: 'text' },
+        { data: 'time', notNull: false, type: 'text' },
+    ])
+    const insertResult = await insert('user_info', data)
     console.log('insertResult -> ', insertResult)
     const token = setToken({ phone_number: req.body.phone_number }, '600s')
     const refreshToken = setToken({ phone_number: req.body.phone_number }, '72h')

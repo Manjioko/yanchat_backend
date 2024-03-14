@@ -4,6 +4,7 @@ import path from 'path'
 import { find } from '../dataBase/operator_data_base.js'
 import { verify } from '../ulits/auth.js'
 import { to } from 'await-to-js'
+import { readTips } from './tipsMessages.js'
 const dataBase = '../dataBase/'
 const wss = new WebSocketServer({ server: $httpServer })
 if (!globalThis.wsClients) {
@@ -30,6 +31,11 @@ function run(mf, ef, cf) {
         console.log(params.get('user_id'), ' -> 已经上线')
         // 将客户端挂到全局
         wsClients[params.get('user_id')] = ws
+
+        // 将消息发送到客户端
+        readTips(params.get('user_id')).then(res => {
+            console.log('消息是 -> ', res)
+        })
 
         ws.on('message', mf.bind(null, ws, params))
         ws.on('error', ef.bind(null,ws))

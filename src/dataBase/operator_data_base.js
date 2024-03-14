@@ -68,6 +68,7 @@ export async function insert(tableName, insertData) {
 
 // 查询数据
 export async function find(tableName, tableStr, findStr) {
+    if (!knex) return
     let result
     if (!tableStr || !findStr) {
         const [err, res] = await to(knex(tableName).select("*"))
@@ -140,6 +141,23 @@ export async function update(tableName, tableStr, findStr, updateObject) {
     const [err, res] = await to(knex(tableName).where(tableStr, findStr).update(updateObject))
     if (err) {
         console.log('update err -> ', err)
+        return
+    }
+    return res
+}
+
+export async function del(tableName, tableStr, findStr) {
+    const [err, res] = await to(knex(tableName).where(tableStr, findStr).del())
+    if (err) {
+        console.log('delete err -> ', err)
+        return
+    }
+    return res
+}
+export async function clear(tableName) {
+    const [err, res] = await to(knex(tableName).truncate())
+    if (err) {
+        console.log('clear err -> ', err)
         return
     }
     return res
