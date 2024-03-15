@@ -744,6 +744,20 @@ app.get('/verifyAuth', auth, async(req, res) => {
     res.sendStatus(200)
 })
 
+// 通过手机号获取到对应的用户信息
+app.post('/getUserInfoByPhone', auth, async(req, res) => {
+    const { phone_number } = req.body
+    if (!phone_number) return res.send([])
+    const data = await find('user_info', 'phone_number', phone_number)
+
+    if (data && data.length) {
+        delete data[0].friends
+        delete data[0].password
+    }
+
+    res.send(data)
+})
+
 // http
 server.listen(9999, () => {
     console.log('http server is listening on *:9999')

@@ -80,6 +80,7 @@ async function message(ws, params, data) {
 function _handleTips(chat) {
     console.log('有消息进入 > ', chat)
     const { tips, to_id, tipsBody, tipsType} = chat
+    console.log('chat -> ', chat)
     if (!tips || !to_id) return
     const tips_messages_id = uuidv4()
     if (tips === 'clear') {
