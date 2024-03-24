@@ -34,7 +34,7 @@ function run(mf, ef, cf) {
 
         // 将消息发送到客户端
         readTips(params.get('user_id')).then(res => {
-            console.log('消息是 -> ', res)
+            // console.log('消息是 -> ', res)
         })
 
         ws.on('message', mf.bind(null, ws, params))

@@ -683,8 +683,8 @@ app.post('/deleteChat', auth, async(req, res) => {
     .del()
     .then(() => {
         // console.log('删除成功')
-        chat.receivedType = 'deleted'
-        wsClients[chat.to_id]?.send(JSON.stringify(chat))
+        // chat.receivedType = 'deleted'
+        // wsClients[chat.to_id]?.send(JSON.stringify(chat))
         if (chat.type !== 'text') {
             try {
                 fs.unlink(fp('../../public/' + chat.response), (unlinkError) => {
@@ -746,12 +746,14 @@ app.get('/verifyAuth', auth, async(req, res) => {
 
 // 通过手机号获取到对应的用户信息
 app.post('/getUserInfoByPhone', auth, async(req, res) => {
-    const { phone_number } = req.body
+    const { phone_number, get_friends } = req.body
     if (!phone_number) return res.send([])
     const data = await find('user_info', 'phone_number', phone_number)
 
     if (data && data.length) {
-        delete data[0].friends
+        if (!get_friends) {
+            delete data[0].friends
+        }
         delete data[0].password
     }
 
