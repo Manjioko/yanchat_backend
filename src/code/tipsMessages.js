@@ -1,5 +1,5 @@
 import { find, insert, del, clear } from '../dataBase/operator_data_base.js'
-
+import fs from 'fs'
 export async function readTips(tableName, tableStr, findStr) {
     const table = 'messages_' + tableName
     const data = await find(table, tableStr, findStr)
@@ -44,4 +44,28 @@ export async function clearAllTips(tableName) {
     } else {
         return null
     }
+}
+
+export async function handleWithdrawTips(chat) {
+    const { to_table, chat_id } = chat
+    knex(to_table)
+    .where('chat','like', `%${chat_id}%`)
+    .del()
+    .then(() => {
+        if (chat.type !== 'text') {
+            try {
+                fs.unlink(fp('../../public/' + chat.response), (unlinkError) => {
+                    if (unlinkError) {
+                        console.error('清除被删除的文件失败:', unlinkError)
+                    } else {
+                        console.log('清除成功')
+                    }
+                })
+            } catch (err) {
+                console.log('Catch err 清除被删除的文件失败:', err)
+            }
+        }
+    }).catch((err) => {
+        console.log('删除聊天记录 err -> ', err)
+    })
 }

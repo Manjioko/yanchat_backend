@@ -1,6 +1,6 @@
 import { insert, find, update, hasTable, createTable } from '../dataBase/operator_data_base.js'
 import { v4 as uuidv4 } from 'uuid'
-import { writeTips, readTips, clearAllTips } from './tipsMessages.js'
+import { writeTips, readTips, clearAllTips, handleWithdrawTips } from './tipsMessages.js'
 
 function err(ws, id, err) {
     console.log('报错 ', err)
@@ -85,6 +85,21 @@ function _handleTips(chat) {
     const tips_messages_id = uuidv4()
     if (messages_type === 'clear') {
         clearAllTips(to_id)
+    } else if (messages_type === 'withdraw') {
+        handleWithdrawTips(messages_box)
+        writeTips(to_id, {
+            messages_id: tips_messages_id,
+            messages_box: messages_box,
+            messages_type: messages_type
+        }).then(res => {
+            if (res) {
+                // 消息系统不同于聊天信息发送接收, 消息系统有高确认性, 必须需要客户端确认
+                // 如果对方在线则需要把消息实时传递到对方的账号
+                if (wsClients[to_id]) {
+                    readTips(to_id)
+                }
+            }
+        })
     } else {
         writeTips(to_id, {
             messages_id: tips_messages_id,
