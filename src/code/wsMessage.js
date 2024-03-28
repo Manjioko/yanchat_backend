@@ -86,6 +86,7 @@ function _handleTips(chat) {
     if (messages_type === 'clear') {
         clearAllTips(to_id)
     } else if (messages_type === 'withdraw') {
+        // 撤回消息 从数据库将数据删掉
         handleWithdrawTips(messages_box)
         writeTips(to_id, {
             messages_id: tips_messages_id,
