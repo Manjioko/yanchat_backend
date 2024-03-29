@@ -134,7 +134,8 @@ app.post('/uploadAvatar', auth, (req, res) => {
             let ext = path.extname(file.originalname)
             let basename = path.basename(file.originalname, ext)
             // 拼凑文件名
-            cb(null, 'avatar_' + user_id + new Date().getTime() + ext)
+            // cb(null, 'avatar_' + user_id + new Date().getTime() + ext)
+            cb(null, 'avatar_' + user_id + ext)
         }
     })
     const upload = multer({ storage }).single('avatar')
@@ -147,12 +148,13 @@ app.post('/uploadAvatar', auth, (req, res) => {
         update('user_info', 'user_id', req.body.user_id, {
             avatar_url: req.file.filename
         })
-        const inputPath = fp(`../../avatar/${req.file.filename}`)
-        const outputPath = fp(`../../avatar/avatar_${req.body.user_id}.jpg`)
+        console.log('req -> ', req.file.filename, req.body.user_id)
+        // const inputPath = fp(`../../avatar/${req.file.filename}`)
+        // const outputPath = fp(`../../avatar/avatar_${req.body.user_id}.jpg`)
         // const [imgErr, result] = await to(imgHandler(inputPath, outputPath))
-        if (imgErr) {
-            return res.send('err')
-        }
+        // if (imgErr) {
+        //     return res.send('err')
+        // }
         res.send(req.file.filename)
     })
 
@@ -644,7 +646,6 @@ app.post('/isUseMd', auth, async(req, res) => {
         is_use_md: is_use_md
     })
     return res.send(true)
-    res.send(true)
 })
 
 // 删除聊天记录
