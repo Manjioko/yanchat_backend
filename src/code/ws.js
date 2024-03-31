@@ -10,12 +10,14 @@ const wss = new WebSocketServer({ server: $httpServer })
 if (!globalThis.wsClients) {
     globalThis.wsClients = {}
 }
+globalThis.deleteList = []
 
 // websocket server 入口函数
 function run(mf, ef, cf) {
     wss.on('connection', async function connection(ws, req) {
         // 参数
         const params = new URLSearchParams(req.url.slice(2))
+        console.log('client connected', params.get('user_id'))
         // console.log('ws headers -> ', params.get('token'))
         const token = params.get('token')
         const user = params.get('user_id')
@@ -23,6 +25,12 @@ function run(mf, ef, cf) {
         // token 验证
         const [tokenErr] = await to(verify(token))
         if (tokenErr) return ws.close(4001, '验证失败')
+
+        // 系统踢出
+        if (deleteList.includes(user)) {
+            ws.close(4002, '您已经被踢出')
+            return
+        }
 
         if (!user || user === 'undefined') {
             ws.close(4001, '参数不合法')

@@ -761,6 +761,24 @@ app.post('/getUserInfoByPhone', auth, async(req, res) => {
     res.send(data)
 })
 
+// 踢 xx 用户出去
+app.post('/kickOut', async(req, res) => {
+    console.log('踢出用户请求 -> ', req.body)
+    const { user_id, out } = req.body
+    if (out === 'true') {
+        if (!deleteList.includes[user_id]) {
+            deleteList.push(user_id)
+            wsClients[user_id]?.close()
+            delete wsClients[user_id]
+            console.log('踢出用户 ', user_id)
+            res.send('已经把用户踢出')
+        }
+    } else {
+        deleteList.splice(deleteList.indexOf(user_id), 1)
+        res.send('已经把用户踢出')
+    }
+})
+
 // http
 server.listen(9999, () => {
     console.log('http server is listening on *:9999')
