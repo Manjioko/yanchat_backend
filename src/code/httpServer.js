@@ -409,7 +409,8 @@ app.post('/addFriend', auth, async (req, res) => {
 
     // 第二步，不存在好友，查询该电话(用户)是否在数据库中存在
     const otherUser = await find('user_info', 'phone_number', friend_phone_number)
-    const otherFriendList =  JSON.parse(otherUser[0]?.friends || '[]')
+    console.log('otherUser -> ', otherUser)
+    const otherFriendList =  JSON.parse(otherUser[0]?.friends || '[]') ?? []
     if(!otherUser || !otherUser.length) {
         console.log('该用户不存在 ', friend_phone_number)
         return  res.send('miss')
@@ -439,6 +440,7 @@ app.post('/addFriend', auth, async (req, res) => {
     const selfFilterUser = fliterProperty(selfUser[0], ['password', 'group', 'friends'], { chat_table })
     
     // console.log('selfFilterUser -> ', selfFilterUser)
+    console.log('otherFriendList -> ', otherFriendList)
     otherFriendList.push(selfFilterUser)
     update('user_info', 'phone_number', friend_phone_number, {
         friends: JSON.stringify(otherFriendList)
@@ -777,6 +779,42 @@ app.post('/kickOut', async(req, res) => {
         deleteList.splice(deleteList.indexOf(user_id), 1)
         res.send('已经把用户踢出')
     }
+})
+
+// 更新客户端数据库版本号
+app.post('/updateVersion', async(req, res) => {
+    const { version, user_id } = req.body
+    if (!version || !user_id) return res.send('err')
+    const [userInfoErr, userInfo] = await to(find('user_info', 'user_id', user_id))
+    if (userInfoErr) return res.send('err')
+    if (userInfo?.db_version < version) {
+        update('user_info', 'user_id', user_id, {
+            db_version: version
+        })
+    }
+    res.send('ok')
+})
+
+// 更新用户信息
+app.post('/updateUserInfo', auth, async(req, res) => {
+    const { data, user_id } = req.body
+    if (!data || !user_id) return res.sendStatus(403)
+    if (data) {
+        delete data.password
+    }
+    const [err, status] = await to(update('user_info', 'user_id', user_id, data))
+    const [err2, userInfo] = await to(find('user_info', 'user_id', user_id))
+
+    if (err) return res.sendStatus(403)
+    if (err2) return res.sendStatus(403)
+
+    if (userInfo && userInfo.length) {
+        delete userInfo[0].password
+        res.send(userInfo[0])
+    } else {
+        res.sendStatus(403)
+    }
+    // res.send(userInfo)
 })
 
 // http

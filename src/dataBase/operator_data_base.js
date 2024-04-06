@@ -141,9 +141,9 @@ export async function update(tableName, tableStr, findStr, updateObject) {
     const [err, res] = await to(knex(tableName).where(tableStr, findStr).update(updateObject))
     if (err) {
         console.log('update err -> ', err)
-        return
+        return Promise.reject(err)
     }
-    return res
+    return Promise.resolve(res)
 }
 
 export async function del(tableName, tableStr, findStr) {
