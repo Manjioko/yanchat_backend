@@ -33,6 +33,8 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
 app.use('/', fontendAuth, express.static(path.join(fp('../../fontend/'))))
+app.use('/chat', fontendAuth, express.static(path.join(fp('../../fontend/'))))
+
 app.use('/avatar', express.static(path.join(fp('../../avatar/'))))
 // app.use('/source', auth, express.static(path.join(fp('../../public/'))))
 app.use('/source', express.static(path.join(fp('../../public/'))))

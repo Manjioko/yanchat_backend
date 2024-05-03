@@ -1,10 +1,10 @@
 # 使用官方的Node.js镜像作为基础镜像
 FROM node:16-alpine
 
-RUN npm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp"
-RUN npm config set sharp_libvips_binary_host "https://npmmirror.com/mirrors/sharp-libvips"
+# RUN npm config set sharp_binary_host "https://npmmirror.com/mirrors/sharp"
+# RUN npm config set sharp_libvips_binary_host "https://npmmirror.com/mirrors/sharp-libvips"
 # 安装Python和相关依赖
-RUN apk update && apk add -f python3 python3-pip
+# RUN apk update && apk add -f python3 python3-pip
 
 # 安装 pm2 用于启动应用程序
 RUN npm install pm2 -g
