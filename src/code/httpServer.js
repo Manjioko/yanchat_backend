@@ -107,7 +107,7 @@ app.post('/uploadFile', auth, (req, res) => {
             console.log('false err -> ', err)
             return res.send('err')
         }
-        console.log(req.file.filename, ' 已经上传。')
+        // console.log(req.file.filename, ' 已经上传。')
         res.send(req.file.filename)
     })
 })

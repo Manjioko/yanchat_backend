@@ -32,6 +32,14 @@ async function message(ws, params, data) {
         return
     }
 
+    if (chat.event && chat.event === 'progress') {
+        // 进度是一种低保证的消息，不需要客户端确认收到操作
+        console.log('进度消息 -> ', chat)
+        chat.receivedType = chat.event
+        wsClients[chat.to_id]?.send(JSON.stringify(chat))
+        return
+    }
+
     if (chat.messages_type) {
         // 处理提示消息
         _handleTips(chat)
@@ -83,39 +91,80 @@ function _handleTips(chat) {
     console.log('chat -> ', chat)
     if (!messages_type || !to_id) return
     const tips_messages_id = uuidv4()
-    if (messages_type === 'clear') {
-        clearAllTips(to_id)
-    } else if (messages_type === 'withdraw') {
-        // 撤回消息 从数据库将数据删掉
-        handleWithdrawTips(messages_box)
-        writeTips(to_id, {
-            messages_id: tips_messages_id,
-            messages_box: messages_box,
-            messages_type: messages_type
-        }).then(res => {
-            if (res) {
-                // 消息系统不同于聊天信息发送接收, 消息系统有高确认性, 必须需要客户端确认
-                // 如果对方在线则需要把消息实时传递到对方的账号
-                if (wsClients[to_id]) {
-                    readTips(to_id)
-                }
+    switch (messages_type) {
+        case 'withdraw':
+            {
+                // 撤回消息 从数据库将数据删掉
+                handleWithdrawTips(messages_box)
+                writeTips(to_id, {
+                    messages_id: tips_messages_id,
+                    messages_box: messages_box,
+                    messages_type: messages_type
+                }).then(res => {
+                    if (res) {
+                        // 消息系统不同于聊天信息发送接收, 消息系统有高确认性, 必须需要客户端确认
+                        // 如果对方在线则需要把消息实时传递到对方的账号
+                        if (wsClients[to_id]) {
+                            readTips(to_id)
+                        }
+                    }
+                })
             }
-        })
-    } else {
-        writeTips(to_id, {
-            messages_id: tips_messages_id,
-            messages_box: messages_box,
-            messages_type: messages_type
-        }).then(res => {
-            if (res) {
-                // 消息系统不同于聊天信息发送接收, 消息系统有高确认性, 必须需要客户端确认
-                // 如果对方在线则需要把消息实时传递到对方的账号
-                if (wsClients[to_id]) {
-                    readTips(to_id)
-                }
+            break
+        case 'clear':
+            clearAllTips(to_id)
+            break
+        default:
+            {
+                writeTips(to_id, {
+                    messages_id: tips_messages_id,
+                    messages_box: messages_box,
+                    messages_type: messages_type
+                }).then(res => {
+                    if (res) {
+                        // 消息系统不同于聊天信息发送接收, 消息系统有高确认性, 必须需要客户端确认
+                        // 如果对方在线则需要把消息实时传递到对方的账号
+                        if (wsClients[to_id]) {
+                            readTips(to_id)
+                        }
+                    }
+                })
             }
-        })
+            break
     }
+    // if (messages_type === 'clear') {
+    //     clearAllTips(to_id)
+    // } else if (messages_type === 'withdraw') {
+    //     // 撤回消息 从数据库将数据删掉
+    //     handleWithdrawTips(messages_box)
+    //     writeTips(to_id, {
+    //         messages_id: tips_messages_id,
+    //         messages_box: messages_box,
+    //         messages_type: messages_type
+    //     }).then(res => {
+    //         if (res) {
+    //             // 消息系统不同于聊天信息发送接收, 消息系统有高确认性, 必须需要客户端确认
+    //             // 如果对方在线则需要把消息实时传递到对方的账号
+    //             if (wsClients[to_id]) {
+    //                 readTips(to_id)
+    //             }
+    //         }
+    //     })
+    // } else {
+    //     writeTips(to_id, {
+    //         messages_id: tips_messages_id,
+    //         messages_box: messages_box,
+    //         messages_type: messages_type
+    //     }).then(res => {
+    //         if (res) {
+    //             // 消息系统不同于聊天信息发送接收, 消息系统有高确认性, 必须需要客户端确认
+    //             // 如果对方在线则需要把消息实时传递到对方的账号
+    //             if (wsClients[to_id]) {
+    //                 readTips(to_id)
+    //             }
+    //         }
+    //     })
+    // }
 }
 
 
