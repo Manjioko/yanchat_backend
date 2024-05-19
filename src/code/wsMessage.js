@@ -59,6 +59,16 @@ async function message(ws, params, data) {
             chat.id = res[0]
             // console.log('data.id ', chat)
             wsClients[chat.to_id].send(JSON.stringify(chat))
+
+            // 现在的做法是，不用等客户端进行确认，服务端直接响应
+            const pongData = {
+                to_table: chat.to_table,
+                chat_id: chat.chat_id,
+                to_id: chat.user_id,
+                receivedType: 'pong',
+                id: res?.[0] || null
+            }
+            wsClients[chat.user_id]?.send(JSON.stringify(pongData))
         })
         // console.log('发送一些消息 -> ', chat.to_table)
         return
@@ -114,6 +124,39 @@ function _handleTips(chat) {
         case 'clear':
             clearAllTips(to_id)
             break
+        case 'uploadSuccess':
+            handleFileUploadSuccess(messages_box, to_id)
+            writeTips(to_id, {
+                messages_id: tips_messages_id,
+                messages_box: messages_box,
+                messages_type: messages_type
+            })
+            .then(res => {
+                if (res) {
+                    // 消息系统不同于聊天信息发送接收, 消息系统有高确认性, 必须需要客户端确认
+                    // 如果对方在线则需要把消息实时传递到对方的账号
+                    if (wsClients[to_id]) {
+                        readTips(to_id)
+                    }
+                }
+            })
+            break
+        case 'uploadFailed':
+            handleFileUploadFailed(messages_box, to_id)
+            writeTips(to_id, {
+                messages_id: tips_messages_id,
+                messages_box: messages_box,
+                messages_type: messages_type
+            }).then(res => {
+                if (res) {
+                    // 消息系统不同于聊天信息发送接收, 消息系统有高确认性, 必须需要客户端确认
+                    // 如果对方在线则需要把消息实时传递到对方的账号
+                    if (wsClients[to_id]) {
+                        readTips(to_id)
+                    }
+                }
+            })
+            break
         default:
             {
                 writeTips(to_id, {
@@ -167,5 +210,47 @@ function _handleTips(chat) {
     // }
 }
 
+function handleFileUploadSuccess(messages_box, to_id) {
+    const { to_table, response, chat_id } = messages_box
+    if (!to_table || !response) return console.log('缺少必要参数')
+    knex(to_table)
+    .where('chat','like', `%${chat_id}%`)
+    .then(res => {
+        if (res.length === 0) return
+        const chat = JSON.parse(res[0].chat)
+        chat.progress = 100
+        chat.response = messages_box.response
+        knex(to_table)
+        .where('id', res[0].id)
+        .update({
+            chat: JSON.stringify(chat)
+        })
+        .then(() => {
+            console.log('文件上传成功***')
+        })
+    })
+}
+
+function handleFileUploadFailed(messages_box, to_id) {
+    const { to_table, response, chat_id } = messages_box
+    if (!to_table || !response) return console.log('缺少必要参数')
+    knex(to_table)
+    .where('chat','like', `%${chat_id}%`)
+    .then(res => {
+        if (res.length === 0) return
+        const chat = JSON.parse(res[0].chat)
+        chat.progress = 0
+        chat.response = messages_box.response
+        chat.destory = true
+        knex(to_table)
+        .where('id', res[0].id)
+        .update({
+            chat: JSON.stringify(chat)
+        })
+        .then(() => {
+            console.log('文件上传失败***')
+        })
+    })
+}
 
 export { message, err, close}
