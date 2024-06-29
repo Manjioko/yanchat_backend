@@ -299,13 +299,25 @@ app.post('/register', async (req, res) => {
             auth: null
         })
     }
+
+    // 创建用户时，给用户新增一个AI聊天室
+    const aiFriend = [
+        {
+            user: 'AI 助手',
+            user_id: uuidv4(),
+            chat_table: uuidv4(),
+            avatar_url: null,
+            ai: true,
+        }
+    ]
+
     const user_id = uuidv4()
     const data = {
         user: req.body.phone_number,
         password: req.body.password,
         user_id,
         phone_number: req.body.phone_number,
-        friends: null,
+        friends: JSON.stringify(aiFriend),
         group: null,
         avatar_url: null,
     }
