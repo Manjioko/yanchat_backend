@@ -12,12 +12,23 @@ function close(ws,params,data) {
     // console.log('用户断开连接 ', data)
     // delete globalThis.wsClients[]
     wsClients[params.get('user_id')] = null
+    wsClients[params.get('user_id')]?.terminate()
     console.log('用户断开连接并已删除 ', params.get('user_id'))
 }
 
 async function message(ws, params, data) {
     // console.log('data -> ', data.toString('utf-8'))
     const chat = JSON.parse(data.toString('utf-8'))
+
+    // 存在一种情况，假性在线客户端发来的信息，需要做处理
+    // 假性客户端就是那些客户端还在线，但是服务器已经经过
+    // 各种原因判断其断开，不在wsClients的维护中了，这种
+    // 客户端发送过来的信息，不要接收
+    if (!wsClients[chat.user_id]) {
+        console.log('无效客户端发送的消息 -> ', chat.user_id, chat.text)
+        ws.terminate() // 强制其下线
+        return
+    }
     
     if (chat.pingpong === 'pong') {
         // console.log('响应包 -> ', chat)
@@ -48,6 +59,7 @@ async function message(ws, params, data) {
 
     // 如果对方在线则需要把消息实时传递到对方的账号
     if (wsClients[chat.to_id]) {
+        console.log('发送一些消息 -> ', chat.to_table, chat.text)
         // 插入数据
         const insertData = {
             user_id: chat.user_id || 'yanchat',
@@ -61,14 +73,14 @@ async function message(ws, params, data) {
             wsClients[chat.to_id].send(JSON.stringify(chat))
 
             // 现在的做法是，不用等客户端进行确认，服务端直接响应
-            const pongData = {
-                to_table: chat.to_table,
-                chat_id: chat.chat_id,
-                to_id: chat.user_id,
-                receivedType: 'pong',
-                id: res?.[0] || null
-            }
-            wsClients[chat.user_id]?.send(JSON.stringify(pongData))
+            // const pongData = {
+            //     to_table: chat.to_table,
+            //     chat_id: chat.chat_id,
+            //     to_id: chat.user_id,
+            //     receivedType: 'pong',
+            //     id: res?.[0] || null
+            // }
+            // wsClients[chat.user_id]?.send(JSON.stringify(pongData))
         })
         // console.log('发送一些消息 -> ', chat.to_table)
         return
@@ -82,8 +94,8 @@ async function message(ws, params, data) {
 
     insert(chat.to_table, insertData)
     .then(res => {
-        console.log('插入数据库返回值 -> ', res)
-        //  客户不在线的情况下,也应该响应发送方的信息
+        console.log('插入数据库返回值 -> ', res, chat.to_table)
+        //  客户不在线的情况下,由服务端进行响应
         const pongData = {
             to_table: chat.to_table,
             chat_id: chat.chat_id,

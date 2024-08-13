@@ -24,31 +24,70 @@ function run(mf, ef, cf) {
 
         // token 验证
         const [tokenErr] = await to(verify(token))
-        if (tokenErr) return ws.close(4001, '验证失败')
+        if (tokenErr) {
+            console.log('token 验证失败 -> ', tokenErr)
+            ws.close(4001, '验证失败')
+
+            return ws.terminate()
+        }
 
         // 系统踢出
         if (deleteList.includes(user)) {
             ws.close(4002, '您已经被踢出')
+            console.log('用户被踢出 -> ', user)
+            ws.terminate()
             return
         }
 
         if (!user || user === 'undefined') {
+            console.log('参数不合法 -> ', user)
             ws.close(4001, '参数不合法')
+            ws.terminate()
             return
         }
         console.log(params.get('user_id'), ' -> 已经上线')
+        // console.log(wss.clients.)
         // 将客户端挂到全局
-        wsClients[params.get('user_id')] = ws
+        if (!wsClients[params.get('user_id')]) {
+            wsClients[params.get('user_id')] = ws
+        } else {
+            wsClients[params.get('user_id')]?.terminate()
+            wsClients[params.get('user_id')] = ws
+        }
+        
 
         // 将消息发送到客户端
-        readTips(params.get('user_id')).then(res => {
-            // console.log('消息是 -> ', res)
-        })
+        // readTips(params.get('user_id')).then(res => {
+        //     // console.log('消息是 -> ', res)
+        // })
 
         ws.on('message', mf.bind(null, ws, params))
         ws.on('error', ef.bind(null,ws))
         ws.on('close', cf.bind(null,ws, params))
+        ws.on('pong', () => {
+            // ws.isAlive = true
+            // console.log('pong -> ', params.get('user_id'))
+        })
+        ws.on('ping', () => {
+            // ws.isAlive = true
+            if (wsClients[params.get('user_id')]) {
+                ws.pong()
+                console.log('ping -> ', params.get('user_id'))
+                return
+            }
+            ws.terminate()
+            console.log('无效ping -> ', params.get('user_id'))
+            // ws.pong()
+        })
     });
+
+    // const interval = setInterval(function ping() {
+    //     wss.clients.forEach(function each(ws) {
+    //       if (ws.isAlive === false) return ws.terminate();
+    //       ws.isAlive = false;
+    //       ws.ping();
+    //     });
+    //   }, 15000);
 }
 
 
