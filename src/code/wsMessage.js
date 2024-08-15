@@ -25,7 +25,7 @@ async function message(ws, params, data) {
     // 各种原因判断其断开，不在wsClients的维护中了，这种
     // 客户端发送过来的信息，不要接收
     if (!wsClients[chat.user_id]) {
-        console.log('无效客户端发送的消息 -> ', chat.user_id, chat.text)
+        console.log('无效客户端发送的消息 -> ', chat)
         ws.terminate() // 强制其下线
         return
     }
