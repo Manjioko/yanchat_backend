@@ -554,7 +554,7 @@ app.post('/chatData', auth, async (req, res) => {
 // 读未读信息
 app.post('/unread', auth, async (req, res) => {
     const { friends, user_id } = req.body
-    // console.log('friends -> ', friends)
+    console.log('friends -> ', friends)
     if (!friends || !Array.isArray(friends)) return res.send('err')
     if (!user_id || typeof user_id !== 'string') return res.send('err')
     const resultOb = {}

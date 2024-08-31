@@ -72,7 +72,7 @@ function run(mf, ef, cf) {
             // ws.isAlive = true
             if (wsClients[params.get('user_id')]) {
                 ws.pong()
-                console.log('ping -> ', params.get('user_id'))
+                // console.log('ping -> ', params.get('user_id'))
                 return
             }
             ws.terminate()
