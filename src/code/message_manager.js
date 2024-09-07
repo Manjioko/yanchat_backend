@@ -1,6 +1,6 @@
-import { insert, find, update, hasTable, createTable } from '../dataBase/operator_data_base.js'
+import { insert, find, update, hasTable, createTable } from '../dataBase/database_handler.js'
 import { v4 as uuidv4 } from 'uuid'
-import { writeTips, readTips, clearAllTips, handleWithdrawTips } from './tipsMessages.js'
+import { writeTips, readTips, clearAllTips, handleWithdrawTips } from './tips_manager.js'
 
 function err(ws, id, err) {
     console.log('报错 ', err)
@@ -70,7 +70,25 @@ async function message(ws, params, data) {
         .then(res => {
             chat.id = res[0]
             // console.log('data.id ', chat)
-            wsClients[chat.to_id].send(JSON.stringify(chat))
+            wsClients[chat.to_id].send(JSON.stringify(chat), err => {
+                if (err) {
+                    console.log('发送消息失败 -> ', err)
+                    // 如果发送消息失败,服务器应该判定该客户端已经离线了
+                    ws.terminate()
+                    delete wsClients[chat.to_id]
+                    // 更新数据库
+                    update(chat.to_table, 'chat', data.toString('utf-8'), { unread: true })
+                    // 数据由服务器接管,发送 pong 给客户端
+                    const pongData = {
+                        to_table: chat.to_table,
+                        chat_id: chat.chat_id,
+                        to_id: chat.user_id,
+                        receivedType: 'pong',
+                        id: res?.[0] || null
+                    }
+                    wsClients[chat.user_id]?.send(JSON.stringify(pongData))
+                }
+            })
 
             // 现在的做法是，不用等客户端进行确认，服务端直接响应
             // const pongData = {
@@ -263,6 +281,10 @@ function handleFileUploadFailed(messages_box, to_id) {
             console.log('文件上传失败***')
         })
     })
+}
+
+function handleSendFailed(messages_box, to_id) {
+
 }
 
 export { message, err, close}

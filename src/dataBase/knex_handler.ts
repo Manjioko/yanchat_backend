@@ -1,7 +1,7 @@
 import knex from "knex"
-import { find } from "./operator_data_base.js"
+import { find } from "./database_handler.js"
 const tableName = 'user_info'
-globalThis.fp = p => {
+globalThis.fp = (p: string) => {
     let resPath = new URL(p, import.meta.url).pathname
     if (process.platform === 'win32') {
         resPath = resPath.slice(1)

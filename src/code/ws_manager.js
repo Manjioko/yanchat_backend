@@ -1,10 +1,10 @@
 import { WebSocketServer } from 'ws'
 import { v4 as uuidv4 } from 'uuid'
 import path from 'path'
-import { find } from '../dataBase/operator_data_base.js'
+import { find } from '../dataBase/database_handler.js'
 import { verify } from '../ulits/auth.js'
 import { to } from 'await-to-js'
-import { readTips } from './tipsMessages.js'
+import { readTips } from './tips_manager.js'
 const dataBase = '../dataBase/'
 const wss = new WebSocketServer({ server: $httpServer })
 if (!globalThis.wsClients) {
