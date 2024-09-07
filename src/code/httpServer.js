@@ -168,7 +168,7 @@ app.post('/uploadSliceFile', async (req, res) => {
     console.log('请求序号 -> ', index)
     // console.log('params -> ', req.params, req.body, req.query)
     if (!fs.existsSync(fp('../../sliceFile/' + uid))) {
-        fs.mkdirSync(fp('../../sliceFile/' + uid))
+        fs.mkdirSync(fp('../../sliceFile/' + uid), { recursive: true })
         console.log(`文件夹 ${uid} 创建成功!`)
     }
 
