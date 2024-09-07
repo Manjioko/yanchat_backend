@@ -1,4 +1,4 @@
-import { find, insert, del, clear } from '../dataBase/operator_data_base.js'
+import { find, insert, del, clear } from '../dataBase/database_handler.js'
 import fs from 'fs'
 export async function readTips(tableName, tableStr, findStr) {
     const table = 'messages_' + tableName

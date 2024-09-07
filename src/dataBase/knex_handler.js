@@ -1,5 +1,5 @@
 import knex from "knex"
-import { find } from "./operator_data_base.js"
+import { find } from "./database_handler.js"
 const tableName = 'user_info'
 globalThis.fp = p => {
     let resPath = new URL(p, import.meta.url).pathname

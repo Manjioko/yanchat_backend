@@ -2,19 +2,15 @@
   "name": "ws",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js"
+    "start": "bun --watch index.ts",
+    "build": "bun build index.ts --outdir out --target bun"
   },
   "author": "",
   "license": "ISC",
   "type": "module",
-  "nodemonConfig": {
-    "watch": [
-      "src/"
-    ]
-  },
   "dependencies": {
     "await-to-js": "^3.0.0",
     "body-parser": "^1.20.2",
@@ -26,7 +22,6 @@
     "jsonwebtoken": "^9.0.2",
     "knex": "^2.5.1",
     "multer": "1.4.4",
-    "ollama": "^0.5.2",
     "sqlite3": "^5.1.6",
     "uuid": "^9.0.0",
     "ws": "^8.14.2"
