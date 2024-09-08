@@ -13,6 +13,7 @@ import fliterProperty from '../ulits/object_handler.js'
 import cors from 'cors'
 // import cookieParser from 'cookie-parser'
 import { setToken, auth, sourceAuth, fontendAuth } from '../ulits/auth.js'
+import { readTips } from './tips_manager.js'
 
 const __dirname = path.resolve()
 // https 在没有 nginx 的测试环境上使用
@@ -829,6 +830,18 @@ app.post('/updateUserInfo', auth, async(req, res) => {
         res.sendStatus(403)
     }
     // res.send(userInfo)
+})
+
+app.post('/getTips', auth, async (req, res) => {
+    const { user_id } = req.body
+    
+    if (user_id) {
+        console.log('更新了Tips!!!')
+        // readTips 会将消息发送到客户端
+        readTips(user_id)
+    }
+
+    res.send('ok')
 })
 
 // http

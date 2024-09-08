@@ -69,7 +69,6 @@ async function message(ws, params, data) {
         insert(chat.to_table, insertData)
         .then(res => {
             chat.id = res[0]
-            // console.log('data.id ', chat)
             wsClients[chat.to_id].send(JSON.stringify(chat), err => {
                 if (err) {
                     console.log('发送消息失败 -> ', err)

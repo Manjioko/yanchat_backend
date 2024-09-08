@@ -1,10 +1,10 @@
 import { WebSocketServer } from 'ws'
-import { v4 as uuidv4 } from 'uuid'
-import path from 'path'
-import { find } from '../dataBase/database_handler.js'
+// import { v4 as uuidv4 } from 'uuid'
+// import path from 'path'
+// import { find } from '../dataBase/database_handler.js'
 import { verify } from '../ulits/auth.js'
 import { to } from 'await-to-js'
-import { readTips } from './tips_manager.js'
+// import { readTips } from './tips_manager.js'
 const dataBase = '../dataBase/'
 const wss = new WebSocketServer({ server: $httpServer })
 if (!globalThis.wsClients) {
@@ -51,7 +51,12 @@ function run(mf, ef, cf) {
         if (!wsClients[params.get('user_id')]) {
             wsClients[params.get('user_id')] = ws
         } else {
-            wsClients[params.get('user_id')]?.terminate()
+            try {
+                wsClients[params.get('user_id')]?.terminate()
+            } catch (e) {
+                console.log('关闭连接出现问题 => ', e)
+            }
+            delete wsClients[params.get('user_id')]
             wsClients[params.get('user_id')] = ws
         }
         
