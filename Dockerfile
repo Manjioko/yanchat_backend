@@ -23,4 +23,4 @@ EXPOSE 9999
 
 # 启动应用程序 这样不会占用终端
 # CMD ["pm2-runtime", "start", "index.js", "-i", "1", "--name", "yanchat"]
-ENTRYPOINT [ "bun", "run", "--watch", "index.js" ]
+ENTRYPOINT [ "bun", "run", "--watch", "index.ts" ]
