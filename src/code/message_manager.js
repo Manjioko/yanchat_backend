@@ -59,7 +59,7 @@ async function message(ws, params, data) {
 
     // 如果对方在线则需要把消息实时传递到对方的账号
     if (wsClients[chat.to_id]) {
-        console.log('发送一些消息 -> ', chat.to_table, chat.text)
+        // console.log('发送一些消息 -> ', chat)
         // 插入数据
         const insertData = {
             user_id: chat.user_id || 'yanchat',
@@ -68,12 +68,13 @@ async function message(ws, params, data) {
         }
         insert(chat.to_table, insertData)
         .then(res => {
-            chat.id = res[0]
+            chat.server_id = res[0]
+            // console.log('插入数据成功 -> ', res, chat)
             wsClients[chat.to_id].send(JSON.stringify(chat), err => {
                 if (err) {
                     console.log('发送消息失败 -> ', err)
                     // 如果发送消息失败,服务器应该判定该客户端已经离线了
-                    ws.terminate()
+                    ws?.terminate()
                     delete wsClients[chat.to_id]
                     // 更新数据库
                     update(chat.to_table, 'chat', data.toString('utf-8'), { unread: true })
@@ -83,7 +84,8 @@ async function message(ws, params, data) {
                         chat_id: chat.chat_id,
                         to_id: chat.user_id,
                         receivedType: 'pong',
-                        id: res?.[0] || null
+                        id: res?.[0] || null,
+                        server_id: res?.[0] || null
                     }
                     wsClients[chat.user_id]?.send(JSON.stringify(pongData))
                 }
@@ -118,7 +120,7 @@ async function message(ws, params, data) {
             chat_id: chat.chat_id,
             to_id: chat.user_id,
             receivedType: 'pong',
-            id: res?.[0] || null
+            server_id: res?.[0] || null
         }
         wsClients[chat.user_id]?.send(JSON.stringify(pongData))
     })

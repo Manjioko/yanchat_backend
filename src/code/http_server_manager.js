@@ -511,13 +511,14 @@ app.post('/addFriendTest', auth, async (req, res) => {
 })
 
 // 读取聊天记录
-app.post('/chatData', auth, async (req, res) => {
-    const { chat_table, offset, limit, user_id } = req.body
+app.post('/chatData', async (req, res) => {
+    const { chat_table, offset, limit, user_id, position } = req.body
+    // position 有两个值， prev 和 desc
     // console.log('cahtdata -> ', chat_table, offset)
     if (!chat_table || !user_id) return res.send({})
     let res_offset = offset
     if (!offset) {
-        const [oerr, odata] = await to(knex(chat_table).select("*").orderBy('id', 'desc').limit(1))
+        const [oerr, odata] = await to(knex(chat_table).select("*").orderBy('id', position).limit(1))
         if (oerr || !odata.length) {
             console.log('offset err -> ', oerr)
             return res.send({})
@@ -526,15 +527,16 @@ app.post('/chatData', auth, async (req, res) => {
         // console.log('res_offset -> ', res_offset)
     }
     // console.log('res_offset -> ', res_offset)
+    // p >
     const [err, data] = await to(
         knex(chat_table)
         .select("*")
-        .where('id', '<', res_offset) // 选择 id 小于 45 的记录
+        .where('id', position === 'prev' ? '>' : '<', res_offset)
         .where(function() {
             // 排除已删除的记录
             this.whereNull('del_flag').orWhere('del_flag', '!=', user_id)
         })
-        .orderBy('id', 'desc')
+        .orderBy('id', position)
         .limit(limit || 8)
     )
     if (err) {
@@ -543,7 +545,13 @@ app.post('/chatData', auth, async (req, res) => {
     }
     // console.log('data -> ', data)
     if (!data) return res.send({offset: 0, chat: []})
-    const resData = data.reverse()
+    // const resData = data.reverse()
+    const resData = data
+    resData.forEach(item => {
+        const chat = JSON.parse(item.chat)
+        chat.server_id = item.id
+        item.chat = JSON.stringify(chat)
+    })
     const resOb = {
         // 如果第一个 id 都不存在,证明没有数据了, 直接返回之前 offset 
         offset: resData[0]?.id || offset,
